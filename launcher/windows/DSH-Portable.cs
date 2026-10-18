@@ -170,9 +170,8 @@ namespace DshPortable
                 AppendStartupTrace("native-host", "process-start", null);
             }
 
-            // The workspace already carries the product identity. Keep the native
-            // caption visually quiet instead of repeating it above the DSH shell.
-            Text = desktopStart ? String.Empty : "DeepSeek-Herness";
+            // The window has no drawn caption (WS_CAPTION is removed), but the title still names the taskbar button.
+            Text = "DeepSeek Harness";
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             // Keep the executable-owned DSH icon on the native frame so the
             // taskbar never falls back to the hosted WebView/Node identity.

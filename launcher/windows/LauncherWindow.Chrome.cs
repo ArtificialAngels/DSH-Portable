@@ -114,6 +114,21 @@ namespace DshPortable
                 base.WndProc(ref message);
                 return;
             }
+            if (desktopStart && !fullscreen && message.Msg == 0x0024)
+            {
+                // WM_GETMINMAXINFO: without a caption the system still extends the maximized outer frame past the
+                // screen by the invisible resize border, which then covers the taskbar. Maximize to the work area.
+                base.WndProc(ref message);
+                Screen screen = Screen.FromHandle(Handle);
+                Rectangle work = screen.WorkingArea, monitor = screen.Bounds;
+                int[] info = new int[10];
+                Marshal.Copy(message.LParam, info, 0, info.Length);
+                info[2] = work.Left - monitor.Left; info[3] = work.Top - monitor.Top;   // ptMaxPosition
+                info[4] = work.Width; info[5] = work.Height;                             // ptMaxSize
+                Marshal.Copy(info, 0, message.LParam, info.Length);
+                message.Result = IntPtr.Zero;
+                return;
+            }
             if (desktopStart && !fullscreen && message.Msg == 0x0083 && message.WParam != IntPtr.Zero)
             {
                 // Keep native sizing styles but render through the invisible

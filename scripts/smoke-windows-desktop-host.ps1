@@ -48,6 +48,9 @@ public static class WindowAppIdentity {
     [DllImport("user32.dll")]
     public static extern bool IsWindowVisible(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hwnd, int command);
+
     [DllImport("shell32.dll", PreserveSig = true)]
     private static extern int SHGetPropertyStoreForWindow(IntPtr hwnd, ref Guid iid, out IntPtr propertyStore);
 
@@ -211,7 +214,21 @@ try {
         $StartupErrors = if (Test-Path -LiteralPath $ErrorLog) { (Get-Content -LiteralPath $ErrorLog -Tail 3) -join "`n" } else { 'No structured startup error was recorded.' }
         throw "DeepSeek Harness did not become ready behind the desktop host at $Root.`n$($Status.Raw)`n$StartupErrors"
     }
-    if ($Process.MainWindowTitle) { throw "The compact desktop chrome must not repeat product identity: $($Process.MainWindowTitle)" }
+    # The caption is not drawn, but the title names the taskbar button; an empty one leaves it without a label.
+    if ($Process.MainWindowTitle -ne 'DeepSeek Harness') { throw "The taskbar button needs the product title, got: '$($Process.MainWindowTitle)'" }
+
+    # Maximizing must stop at the work area: an outer frame that spills past it covers the taskbar.
+    Add-Type -AssemblyName System.Windows.Forms
+    [void][WindowAppIdentity]::ShowWindow($Process.MainWindowHandle, 3)
+    Start-Sleep -Milliseconds 800
+    $MaximizedRect = [WindowAppIdentity+Rect]::new()
+    if (-not [WindowAppIdentity]::GetWindowRect($Process.MainWindowHandle, [ref]$MaximizedRect)) { throw 'Could not measure the maximized desktop window.' }
+    $WorkArea = [System.Windows.Forms.Screen]::FromHandle($Process.MainWindowHandle).WorkingArea
+    if ($MaximizedRect.Bottom -gt $WorkArea.Bottom + 1 -or $MaximizedRect.Top -lt $WorkArea.Top - 1 -or $MaximizedRect.Right -gt $WorkArea.Right + 1 -or $MaximizedRect.Left -lt $WorkArea.Left - 1) {
+        throw "The maximized window spills past the work area (window $($MaximizedRect.Left),$($MaximizedRect.Top),$($MaximizedRect.Right),$($MaximizedRect.Bottom); work area $($WorkArea.Left),$($WorkArea.Top),$($WorkArea.Right),$($WorkArea.Bottom))"
+    }
+    [void][WindowAppIdentity]::ShowWindow($Process.MainWindowHandle, 9)
+    Start-Sleep -Milliseconds 500
 
     $AppId = [WindowAppIdentity]::GetAppUserModelId($Process.MainWindowHandle)
     if ($AppId -ne 'io.github.wsl043.dsh-portable') { throw "Unexpected AppUserModelID: $AppId" }
