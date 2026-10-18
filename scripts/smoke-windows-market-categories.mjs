@@ -178,14 +178,16 @@ try {
     if (!portableGroup) return null
     const sections = [...portableGroup.children].filter(child => child.matches?.('section[aria-label]'))
     const dataSection = sections.filter(section => dataLabels.has(section.getAttribute('aria-label') || '')).at(-1)
-    const dataRow = dataSection?.lastElementChild
+    // Each group's rows sit inside one card (dshPortableCard); the rows are the card's children.
+    const rowsOf = section => [...section.children].slice(1).flatMap(child => child.classList?.contains('dshPortableCard') ? [...child.children] : [child])
+    const dataRow = dataSection ? rowsOf(dataSection).at(-1) : null
     if (!dataSection || !dataRow) return null
     dataSection.scrollIntoView({ block: 'end' })
     const borderOf = node => {
       const value = getComputedStyle(node).borderBottomWidth
       return { value, px: Number.parseFloat(value) }
     }
-    const internalRows = sections.flatMap(section => [...section.children].slice(1).map(row => ({
+    const internalRows = sections.flatMap(section => rowsOf(section).map(row => ({
       section: section.getAttribute('aria-label') || '', text: textOf(row).slice(0, 200), borderBottom: borderOf(row),
     })))
     return {
