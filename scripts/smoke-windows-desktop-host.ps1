@@ -54,6 +54,9 @@ public static class WindowAppIdentity {
     [DllImport("user32.dll")]
     public static extern bool IsZoomed(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
+
     [DllImport("shell32.dll", PreserveSig = true)]
     private static extern int SHGetPropertyStoreForWindow(IntPtr hwnd, ref Guid iid, out IntPtr propertyStore);
 
@@ -220,20 +223,19 @@ try {
     # The caption is not drawn, but the title names the taskbar button; an empty one leaves it without a label.
     if ($Process.MainWindowTitle -ne 'DeepSeek Harness') { throw "The taskbar button needs the product title, got: '$($Process.MainWindowTitle)'" }
 
-    # Maximizing must stop at the work area: an outer frame that spills past it covers the taskbar.
+    # Maximizing must stop at the work area: an outer frame that spills past it covers the taskbar. The window is
+    # hidden and parked off screen here, so ask the window what it would maximize to instead of maximizing it.
     Add-Type -AssemblyName System.Windows.Forms
-    [void][WindowAppIdentity]::SetWindowPos($Process.MainWindowHandle, [IntPtr]::Zero, 100, 100, 900, 620, 0x0214)
-    [void][WindowAppIdentity]::ShowWindow($Process.MainWindowHandle, 3)
-    Start-Sleep -Milliseconds 800
-    if (-not [WindowAppIdentity]::IsZoomed($Process.MainWindowHandle)) { throw 'The desktop window did not maximize.' }
-    $MaximizedRect = [WindowAppIdentity+Rect]::new()
-    if (-not [WindowAppIdentity]::GetWindowRect($Process.MainWindowHandle, [ref]$MaximizedRect)) { throw 'Could not measure the maximized desktop window.' }
-    $WorkArea = [System.Windows.Forms.Screen]::FromHandle($Process.MainWindowHandle).WorkingArea
-    if ($MaximizedRect.Bottom -gt $WorkArea.Bottom + 1 -or $MaximizedRect.Top -lt $WorkArea.Top - 1 -or $MaximizedRect.Right -gt $WorkArea.Right + 1 -or $MaximizedRect.Left -lt $WorkArea.Left - 1) {
-        throw "The maximized window spills past the work area (window $($MaximizedRect.Left),$($MaximizedRect.Top),$($MaximizedRect.Right),$($MaximizedRect.Bottom); work area $($WorkArea.Left),$($WorkArea.Top),$($WorkArea.Right),$($WorkArea.Bottom))"
+    $Info = [int[]]::new(10)
+    $InfoHandle = [System.Runtime.InteropServices.GCHandle]::Alloc($Info, 'Pinned')
+    try { [void][WindowAppIdentity]::SendMessage($Process.MainWindowHandle, 0x0024, [IntPtr]::Zero, $InfoHandle.AddrOfPinnedObject()) }
+    finally { $InfoHandle.Free() }
+    $Screen = [System.Windows.Forms.Screen]::FromHandle($Process.MainWindowHandle)
+    $WorkArea = $Screen.WorkingArea
+    $Monitor = $Screen.Bounds
+    if ($Info[2] -ne $WorkArea.Left - $Monitor.Left -or $Info[3] -ne $WorkArea.Top - $Monitor.Top -or $Info[4] -ne $WorkArea.Width -or $Info[5] -ne $WorkArea.Height) {
+        throw "Maximizing would not stop at the work area (position $($Info[2]),$($Info[3]) size $($Info[4])x$($Info[5]); work area $($WorkArea.Left),$($WorkArea.Top) $($WorkArea.Width)x$($WorkArea.Height))"
     }
-    [void][WindowAppIdentity]::ShowWindow($Process.MainWindowHandle, 9)
-    Start-Sleep -Milliseconds 500
 
     $AppId = [WindowAppIdentity]::GetAppUserModelId($Process.MainWindowHandle)
     if ($AppId -ne 'io.github.wsl043.dsh-portable') { throw "Unexpected AppUserModelID: $AppId" }
