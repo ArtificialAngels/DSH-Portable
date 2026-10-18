@@ -85,14 +85,23 @@ function compareIdentifier(left, right) {
   return left === right ? 0 : left < right ? -1 : 1
 }
 
-// The newest three core versions, except that alphas never push the newest release candidate or final out: when all
-// three are alphas, the third slot goes to the newest non-alpha version. Input must be sorted newest first.
+// The cores offered to users: the newest five versions, where at least two are release candidates or finals. Alphas
+// never push the newest release candidates out: when fewer than two non-alpha versions fall inside the newest five, the
+// oldest alpha slots go to the newest non-alpha versions instead. Input must be sorted newest first.
+// Keep this identical to selectCoreWindow() in DSH-Portable-Updates scripts/core-window.mjs.
+const CORE_WINDOW_SIZE = 5
+const CORE_WINDOW_MIN_RELEASE_CANDIDATES = 2
+
 export function coreWindow(items, versionOf = item => item) {
-  const window = items.slice(0, 3)
+  const window = items.slice(0, CORE_WINDOW_SIZE)
   const isAlpha = item => /-alpha[.]/.test(versionOf(item))
-  if (window.length === 3 && window.every(isAlpha)) {
-    const stable = items.find(item => !isAlpha(item))
-    if (stable !== undefined) window[2] = stable
+  const missing = CORE_WINDOW_MIN_RELEASE_CANDIDATES - window.filter(item => !isAlpha(item)).length
+  if (missing <= 0) return window
+  for (const extra of items.slice(CORE_WINDOW_SIZE).filter(item => !isAlpha(item)).slice(0, missing)) {
+    const alphaAt = window.map(isAlpha).lastIndexOf(true)
+    if (alphaAt === -1) break
+    window.splice(alphaAt, 1)
+    window.push(extra)
   }
   return window
 }
