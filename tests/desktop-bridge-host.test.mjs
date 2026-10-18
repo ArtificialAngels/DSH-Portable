@@ -403,10 +403,14 @@ test('Portable preferences use the official settings navigation', async () => {
   assert.doesNotMatch(client, /settings\.general\.item/)
   const settingsRegistration = client.slice(client.indexOf("name: 'settings.section'"), client.indexOf('}, SettingsSection)'))
   assert.match(settingsRegistration, /label:/)
-  assert.match(client, /borderBottom:\s*['"]1px solid var\(--dsw-alias-border-l2\)['"]/);
+  assert.match(client, /borderBottom:\s*['"]\.5px solid var\(--dsw-alias-border-l2\)['"]/);
   assert.match(client, /padding:\s*['"]0 0 8px['"]/);
-  assert.match(client, /section:\s*\{[^}]*gap:\s*0[^}]*marginTop:\s*18/s)
-  assert.match(client, /item:\s*\{[^}]*padding:\s*['"]14px 0['"][^}]*borderBottom:\s*['"]1px solid var\(--dsw-alias-border-l2\)['"][^}]*flexWrap:\s*['"]wrap['"]/s)
+  assert.match(client, /section:\s*\{[^}]*gap:\s*8[^}]*marginTop:\s*20/s)
+  // Same surface and row rhythm as DSH's own settings pages: a card per group, hairline dividers, 16px page title.
+  assert.match(client, /\.dshPortableCard\{border:\.5px solid var\(--dsw-alias-settings-card-stroke\);background:var\(--dsw-alias-settings-card-fill\);border-radius:var\(--dsw-radius-xl\)/)
+  assert.match(client, /pageTitle:\s*\{[^}]*fontSize:\s*16[^}]*fontWeight:\s*500[^}]*lineHeight:\s*['"]24px['"]/s)
+  assert.match(client, /\.dshPortableSelector\{[^}]*border-radius:var\(--dsw-radius-md\)/)
+  assert.match(client, /item:\s*\{[^}]*padding:\s*['"]16px 0['"][^}]*borderBottom:\s*['"]\.5px solid var\(--dsw-alias-border-l2\)['"][^}]*flexWrap:\s*['"]wrap['"]/s)
   assert.match(client, /text:\s*\{[^}]*gap:\s*4/s)
   assert.match(client, /primitives\.Menu/)
   assert.match(client, /primitives\.Modal/)

@@ -786,10 +786,11 @@ window.__ModuleLoader__.load({
       const styles = {
         group: { display: 'flex', flexDirection: 'column', padding: '0 0 8px' },
         heading: { color: 'var(--dsw-alias-label-primary)', fontSize: 14, fontWeight: 500, lineHeight: '22px', marginBottom: 0 },
-        section: { display: 'flex', flexDirection: 'column', gap: 0, marginTop: 18 },
+        pageTitle: { color: 'var(--dsw-alias-label-primary)', fontSize: 16, fontWeight: 500, lineHeight: '24px', margin: 0 },
+        section: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 },
         sectionHeading: { color: 'var(--dsw-alias-label-secondary)', fontSize: 12, fontWeight: 500, lineHeight: '18px', padding: 0 },
-        item: { display: 'flex', gap: 16, alignItems: 'center', padding: '14px 0', borderBottom: '1px solid var(--dsw-alias-border-l2)', flexWrap: 'wrap' },
-        text: { display: 'flex', flex: '1 1 260px', minWidth: 0, flexDirection: 'column', gap: 4 },
+        item: { display: 'flex', gap: 8, alignItems: 'center', padding: '16px 0', borderBottom: '.5px solid var(--dsw-alias-border-l2)', flexWrap: 'wrap' },
+        text: { display: 'flex', flex: '1 1 260px', minWidth: 0, flexDirection: 'column', gap: 4, paddingRight: 32 },
         label: { color: 'var(--dsw-alias-label-primary)', fontSize: 14, fontWeight: 400, lineHeight: '22px' },
         hint: { color: 'var(--dsw-alias-label-secondary)', fontSize: 12, lineHeight: '18px' },
         controls: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 },
@@ -804,13 +805,13 @@ window.__ModuleLoader__.load({
         importFile: { color: 'var(--dsw-alias-label-secondary)', fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace', fontSize: 11, lineHeight: '18px', overflowWrap: 'anywhere' },
         version: { color: 'var(--dsw-alias-label-secondary)', fontSize: 12, lineHeight: '18px', whiteSpace: 'nowrap' },
         rowActions: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8, flex: '0 1 auto', maxWidth: '100%' },
-        updateBlock: { display: 'flex', flexDirection: 'column', gap: 16, padding: '22px 0', borderBottom: '1px solid var(--dsw-alias-border-l2)' },
-        updateHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' },
+        updateBlock: { display: 'flex', flexDirection: 'column', gap: 0 },
+        updateHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '14px 0' },
       }
       const inlineStatus = key => messages[key]
         ? h('div', { ref: node => { statusRefs.current[key] = node }, style: styles.status, role: 'status', 'aria-live': 'polite' }, messages[key])
         : null
-      if (!settings) return h('div', { style: styles.group }, h('div', { style: styles.heading }, t(page === 'updates' ? 'updates' : 'title')),
+      if (!settings) return h('div', { style: styles.group }, h('div', { style: styles.pageTitle }, t(page === 'updates' ? 'updates' : 'title')),
         h('div', { style: styles.hint, role: 'status' }, messages.portable || t('checking')))
       const booleanRow = (key, title, hint) => h('div', { style: styles.item },
         h('div', { style: styles.text }, h('div', { style: styles.label }, title), h('div', { style: styles.hint }, hint)),
@@ -819,8 +820,8 @@ window.__ModuleLoader__.load({
           items: [{ id: 'off', label: t('off') }, { id: 'on', label: t('on') }],
           onSelect: value => update({ [key]: value === 'on' }),
         }))
-      const updateRow = (scope, key, title, version, hint, details = null) => h('section', { style: styles.updateBlock, 'aria-label': title },
-        h('div', { style: styles.updateHeader },
+      const updateRow = (scope, key, title, version, hint, details = null) => h('section', { style: styles.updateBlock, className: 'dshPortableCard dshPortableCardRows', 'aria-label': title },
+        h('div', { style: styles.updateHeader, className: 'dshPortableRow' },
           h('div', { style: styles.text }, h('div', { style: styles.heading }, title),
             h('div', { style: styles.hint }, hint),
             version && h('div', { style: styles.version }, format(t('currentVersion'), scope === 'engine' ? coreLabel(version) : version)),
@@ -828,7 +829,7 @@ window.__ModuleLoader__.load({
           h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy) || settingsSaving, onClick: () => checkUpdate(scope) },
             busy === `update-${scope}` ? t('checking') : (scope === 'engine' && engineVersion && engineVersion !== version) || (scope === 'product' && productVersion && productVersion !== version)
               ? format(t('installVersionNamed'), scope === 'engine' ? coreLabel(engineVersion) : productVersion) : updateOffers[scope] ? t('installUpdate') : t('checkUpdate'))),
-        scope === 'product' && h('div', { style: styles.updateHeader },
+        scope === 'product' && h('div', { style: styles.updateHeader, className: 'dshPortableRow' },
           h('div', { style: styles.label }, t('productVersionChoice')),
           h(PortableSelector, {
             primitives, value: productVersion || version, label: t('productVersionChoice'),
@@ -839,7 +840,7 @@ window.__ModuleLoader__.load({
           && h('div', { style: styles.hint, role: 'status' }, t('productDowngradeHint')),
         scope === 'product' && productCatalogLoaded && !productVersions.some(item => item.version !== version)
           && h('div', { style: styles.hint }, t('noProductVersions')),
-        scope === 'engine' && version && h('div', { style: styles.updateHeader },
+        scope === 'engine' && version && h('div', { style: styles.updateHeader, className: 'dshPortableRow' },
           h('div', { style: styles.label }, t('versionChoice')),
           h(PortableSelector, {
             primitives, value: engineVersion || version, label: t('versionChoice'),
@@ -850,7 +851,7 @@ window.__ModuleLoader__.load({
           })),
         scope === 'engine' && version && engineVersion && compareCoreVersions(engineVersion, version) < 0
           && h('div', { style: styles.hint, role: 'status' }, t('engineDowngradeHint')),
-        h('div', { style: styles.updateHeader },
+        h('div', { style: styles.updateHeader, className: 'dshPortableRow' },
           h('div', { style: styles.label }, t(scope === 'engine' ? 'startupCheckEngine' : 'startupCheckProduct')),
           h(PortableSelector, {
             primitives, value: settings[key] ? 'on' : 'off', label: `${title} · ${t('startupCheck')}`,
@@ -860,7 +861,7 @@ window.__ModuleLoader__.load({
         details)
       const restoreKey = coreRestore && versions.engine && compareCoreVersions(coreRestore.preferredCore, versions.engine) > 0
         ? ({ 'awaiting-qualification': 'coreRestoreWaiting', 'catalog-unavailable': 'coreRestoreRetry', failed: 'coreRestoreRetry' })[coreRestore.status] : null
-      const updatesSection = h('section', { style: styles.section, 'aria-label': t('updates') },
+      const updatesSection = h('section', { style: { ...styles.section, marginTop: 16, gap: 12 }, 'aria-label': t('updates') },
         restoreKey && h('div', { style: styles.status, role: 'status' },
           format(t(restoreKey), coreLabel(coreRestore.preferredCore), coreLabel(versions.engine))),
         // The notice is about the program that is running now; once a later update succeeded, or after two weeks, it is stale.
@@ -879,7 +880,7 @@ window.__ModuleLoader__.load({
               key: `${item.version}-${index}`, style: styles.status, role: 'status',
             }, unavailableMessage(item)))))))
       if (page === 'updates') return h('div', { style: styles.group },
-        h('div', { style: styles.heading }, t('updates')),
+        h('div', { style: styles.pageTitle }, t('updates')),
         inlineStatus('portable'), updatesSection,
         h('div', { style: { ...styles.hint, marginTop: 16 } }, t('updateRecovery')))
       const environmentItems = environments.items.map(item => ({
@@ -888,7 +889,7 @@ window.__ModuleLoader__.load({
       }))
       const environmentSection = environmentsSupported && h('section', { style: styles.section, 'aria-label': t('environments') },
         h('div', { style: styles.sectionHeading }, t('environments')),
-        h('div', { style: styles.item },
+        h('div', { className: 'dshPortableCard' }, h('div', { style: styles.item },
           h('div', { style: styles.text },
             h('div', { style: styles.label }, t('environmentTitle')),
             h('div', { style: styles.hint }, t('environmentHint')),
@@ -898,17 +899,17 @@ window.__ModuleLoader__.load({
               primitives, value: environments.current, label: t('environmentTitle'), items: environmentItems,
               onSelect: openEnvironment,
             }),
-            h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => setEnvironmentDialog(true) }, t('newEnvironment')))))
+            h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => setEnvironmentDialog(true) }, t('newEnvironment'))))))
       const desktopSection = h('section', { style: styles.section, 'aria-label': t('desktop') },
         h('div', { style: styles.sectionHeading }, t('desktop')),
-        booleanRow('taskNotificationsEnabled', t('notifications'), notificationAvailability === 'disabled-system' ? t('notificationsSystemDisabled') : t('notificationsHint')),
+        h('div', { className: 'dshPortableCard' }, booleanRow('taskNotificationsEnabled', t('notifications'), notificationAvailability === 'disabled-system' ? t('notificationsSystemDisabled') : t('notificationsHint')),
         h('div', { style: styles.item },
           h('div', { style: styles.text }, h('div', { style: styles.label }, t('close'))),
           h(PortableSelector, {
             primitives, value: settings.closeBehavior, label: t('close'),
             items: [{ id: 'tray', label: t('tray') }, { id: 'exit', label: t('exit') }],
             onSelect: closeBehavior => update({ closeBehavior }),
-          })))
+          }))))
       const maintenanceMenu = h(primitives.Menu, {
         open: maintenanceMenuOpen,
         anchor: h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => setMaintenanceMenuOpen(current => !current) }, t('more')),
@@ -960,14 +961,14 @@ window.__ModuleLoader__.load({
       })
       const careSection = h('section', { style: styles.section, 'aria-label': t('care') },
         h('div', { style: styles.sectionHeading }, t('care')),
-        h('div', { style: styles.item },
+        h('div', { className: 'dshPortableCard' }, h('div', { style: styles.item },
           h('div', { style: styles.text },
             h('div', { style: styles.label }, t('maintenance')),
             h('div', { style: styles.hint }, t('maintenanceHint')),
             inlineStatus('maintenance')),
           h('div', { style: styles.rowActions },
             h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => action('doctor', '/dsh-portable/doctor') }, busy === 'doctor' ? t('checking') : t('check')),
-            maintenanceMenu)))
+            maintenanceMenu))))
       const privatePasswordMismatch = privatePasswordConfirm.length > 0 && privatePassword !== privatePasswordConfirm
       const environmentCreateDialog = environmentDialog ? h(primitives.Modal, {
         open: true,
@@ -1027,11 +1028,11 @@ window.__ModuleLoader__.load({
           hiddenImportFileCount > 0 && h('div', { style: styles.importFile }, format(t('dataImportMoreFiles'), hiddenImportFileCount))))) : null
       const dataSection = h('section', { style: styles.section, 'aria-label': t('data') },
         h('div', { style: styles.sectionHeading }, t('data')),
-        h('div', { style: { ...styles.item, borderBottom: 'none' } },
+        h('div', { className: 'dshPortableCard' }, h('div', { style: styles.item },
           h('div', { style: styles.text }, h('div', { style: styles.label }, t('dataTitle')), h('div', { style: styles.hint }, t('dataHint')), inlineStatus('data')),
           h('div', { style: styles.rowActions },
             h(primitives.Button, { size: 'sm', variant: 'outline', title: t('dataImportHint'), disabled: Boolean(busy), onClick: beginImport }, t('dataImport')),
-            h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => { setStatus('data', ''); setDataDialog('export') } }, t('dataExport')))))
+            h(primitives.Button, { size: 'sm', variant: 'outline', disabled: Boolean(busy), onClick: () => { setStatus('data', ''); setDataDialog('export') } }, t('dataExport'))))))
       const exportDialog = dataDialog === 'export' ? h(primitives.Modal, {
         open: true, title: t('dataExport'), description: t('dataHint'),
         onClose: () => { if (!busy) setDataDialog('') },
@@ -1047,7 +1048,7 @@ window.__ModuleLoader__.load({
         exportKind !== 'private' && dataScope === 'full' && h('div', { style: styles.status, role: 'alert' }, t('dataPlainCredentialsWarning')),
         inlineStatus('data'))) : null
       return h('div', { style: styles.group },
-        h('div', { style: styles.heading }, t('title')),
+        h('div', { style: styles.pageTitle }, t('title')),
         inlineStatus('portable'),
         desktopSection,
         dataSection,
@@ -1281,7 +1282,7 @@ window.__ModuleLoader__.load({
             if (!document.getElementById('dsh-portable-settings-controls')) {
               const style = document.createElement('style')
               style.id = 'dsh-portable-settings-controls'
-              style.textContent = '.dshPortableSelector{background:var(--dsw-alias-bg-module-platform);height:36px;font:inherit;color:var(--dsw-alias-label-primary);cursor:pointer;border:none;border-radius:18px;align-items:center;gap:12px;padding:0 14px;font-size:14px;line-height:22px;display:inline-flex;white-space:nowrap}.dshPortableSelector:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshPortableSelectorChevron{flex:none}.dshPortableFooterUpdate{flex:none;align-items:center;align-self:flex-end;width:36px;height:36px;margin:0 0 -36px auto;display:flex;position:relative;z-index:1}.dshPortableFooterUpdateButton{width:36px;height:36px;color:var(--dsw-alias-label-primary);cursor:pointer;background:transparent;border:0;border-radius:50%;justify-content:center;align-items:center;padding:0;font:inherit;display:inline-flex;position:relative}.dshPortableFooterUpdateButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshPortableUpdateDot{position:absolute;right:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-business-primary)}.dshPortableEnvironmentChip{height:28px;max-width:180px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-interactive-bg-hover-solid);border-radius:14px;align-items:center;gap:6px;padding:0 10px;font-size:13px;line-height:20px;display:inline-flex}.dshPortableEnvironmentChip span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}'
+              style.textContent = '.dshPortableSelector{background:var(--dsw-alias-bg-module-platform);height:36px;font:inherit;color:var(--dsw-alias-label-primary);cursor:pointer;border:none;border-radius:var(--dsw-radius-md);align-items:center;gap:12px;padding:0 14px;font-size:14px;line-height:22px;display:inline-flex;white-space:nowrap}.dshPortableSelector:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshPortableSelectorChevron{flex:none}.dshPortableCard{border:.5px solid var(--dsw-alias-settings-card-stroke);background:var(--dsw-alias-settings-card-fill);border-radius:var(--dsw-radius-xl);padding:0 14px;display:flex;flex-direction:column}.dshPortableCard>:last-child{border-bottom:0!important}.dshPortableRow~.dshPortableRow{border-top:.5px solid var(--dsw-alias-border-l2)}.dshPortableFooterUpdate{flex:none;align-items:center;align-self:flex-end;width:36px;height:36px;margin:0 0 -36px auto;display:flex;position:relative;z-index:1}.dshPortableFooterUpdateButton{width:36px;height:36px;color:var(--dsw-alias-label-primary);cursor:pointer;background:transparent;border:0;border-radius:50%;justify-content:center;align-items:center;padding:0;font:inherit;display:inline-flex;position:relative}.dshPortableFooterUpdateButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.dshPortableUpdateDot{position:absolute;right:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-business-primary)}.dshPortableEnvironmentChip{height:28px;max-width:180px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-interactive-bg-hover-solid);border-radius:14px;align-items:center;gap:6px;padding:0 10px;font-size:13px;line-height:20px;display:inline-flex}.dshPortableEnvironmentChip span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}'
               document.head.appendChild(style)
             }
             const SettingsSection = () => PortableSettings(ctx, primitives)
