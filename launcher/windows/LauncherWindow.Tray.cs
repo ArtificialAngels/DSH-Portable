@@ -190,6 +190,24 @@ namespace DshPortable
             });
         }
 
+        // The same restart the plugin market asks for, started from the File menu. A running task is never interrupted.
+        private void RequestDesktopRestart()
+        {
+            if (shutdownRunning || !desktopReady || operationRunning) return;
+            if (trayState != null && trayState.hasRunningSession)
+            {
+                WriteLauncherLog("restart-host", "request-refused source=menu reason=running-session");
+                MessageBox.Show(this,
+                    L("任务仍在运行；完成后再重启即可，当前任务不会被中断。",
+                        "A task is still running. Restart after it finishes; the current task was not interrupted."),
+                    "DeepSeek Harness", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            WriteLauncherLog("restart-host", "request-accepted source=menu");
+            restartAfterShutdown = true;
+            BeginDesktopShutdown();
+        }
+
         private ToolStripMenuItem CreateExitItem()
         {
             return new ToolStripMenuItem(L("退出 DeepSeek Harness", "Exit DeepSeek Harness"), null, delegate
