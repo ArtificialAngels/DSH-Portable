@@ -423,6 +423,8 @@ test('Windows tray presents sessions and commands in one compact Codex-style nat
   assert.match(host, /新会话|New session/)
   assert.match(host, /反馈问题|Report a problem/)
   assert.match(host, /退出 DeepSeek Harness|Exit DeepSeek Harness/)
+  assert.match(host, /重启 DeepSeek Harness/, 'the File menu offers Restart (the tray menu stays at its bounded ten rows)')
+  assert.match(host, /RequestDesktopRestart\(\)[\s\S]*?hasRunningSession[\s\S]*?restartAfterShutdown = true;\s*BeginDesktopShutdown\(\);/, 'a menu restart refuses while a task runs and otherwise uses the shared shutdown-then-relaunch path')
 })
 
 test('macOS GUI is a native WKWebView app rather than a Chrome app-mode launcher', async () => {

@@ -233,6 +233,8 @@ namespace DshPortable
             file.DropDownItems.Add(CreateTerminalItem());
             file.DropDownItems.Add(new ToolStripSeparator());
             AddDesktopCommand(file, "close", L("关闭窗口", "Close window"), Keys.Control | Keys.W, delegate { Close(); });
+            AddDesktopCommand(file, "restart", L("重启 DeepSeek Harness", "Restart DeepSeek Harness"), Keys.None,
+                delegate { RequestDesktopRestart(); });
             AddDesktopCommand(file, "exit", L("退出 DeepSeek Harness", "Exit DeepSeek Harness"), Keys.Control | Keys.Q,
                 delegate { if (!shutdownRunning) BeginDesktopShutdown(); });
             AddDesktopCommand(view, "reload", L("重新加载界面", "Reload interface"), Keys.Control | Keys.R,
@@ -362,7 +364,7 @@ namespace DshPortable
                     if (id == "new-session" || id == "settings") item.Enabled &= desktopReady && trayBridgeReady && !operationRunning;
                     if (id == "reload" || id.StartsWith("zoom-")) item.Enabled &= desktopReady && !operationRunning && !webViewRecoveryRunning;
                     if (id == "close") item.Enabled &= desktopReady;
-                    if (id == "exit") item.Enabled &= desktopReady && !operationRunning;
+                    if (id == "exit" || id == "restart") item.Enabled &= desktopReady && !operationRunning;
                     if (id.EndsWith("-update")) item.Enabled &= desktopReady && !operationRunning && !updateCheckRunning && !updateInteractionRunning;
                     if (id == "maximize") ((ToolStripMenuItem)item).Checked = !fullscreen && WindowState == FormWindowState.Maximized;
                     if (id == "fullscreen") ((ToolStripMenuItem)item).Checked = fullscreen;
