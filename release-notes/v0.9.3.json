@@ -1,0 +1,25 @@
+{
+  "version": "0.9.3",
+  "zh": {
+    "summary": "修复 Windows 任务栏按钮没有名字、窗口最大化时盖住任务栏的问题；可选的内核版本从 3 个增加到 5 个。",
+    "highlights": [
+      "Windows：任务栏按钮现在显示「DeepSeek Harness」，不再只有图标。窗口里仍不重复画标题栏。",
+      "Windows：窗口最大化时停在屏幕工作区内，不再延伸到任务栏下面，任务栏和托盘图标保持可见。高分屏（例如 200% 缩放）上同样适用。",
+      "内核：设置里可选的内核版本从最新 3 个增加到最新 5 个，并保证其中至少有 2 个 RC 或正式版，alpha 不会把它们挤出去。新增的版本由内核库自动验证后补上。"
+    ],
+    "upgradeNotes": [
+      "升级会保留设置、会话、插件和默认工作区。整包更新后会自动恢复你选的内核。"
+    ]
+  },
+  "en": {
+    "summary": "Fixes the Windows taskbar button having no name and the maximized window covering the taskbar; the selectable core list grows from three to five versions.",
+    "highlights": [
+      "Windows: the taskbar button now reads \"DeepSeek Harness\" instead of showing only an icon. The window still does not draw a second title bar.",
+      "Windows: a maximized window stops at the screen's work area instead of extending under the taskbar, so the taskbar and tray icons stay visible, including on high-DPI screens such as 200% scaling.",
+      "Core: Settings now offers the newest five core versions instead of three, always including at least two release candidates or finals so alphas cannot push them out. The added versions are qualified by the core repository and appear automatically."
+    ],
+    "upgradeNotes": [
+      "Upgrading keeps settings, sessions, plugins, and the default workspace. After a full update your chosen core is restored automatically."
+    ]
+  }
+}
