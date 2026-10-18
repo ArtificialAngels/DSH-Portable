@@ -107,12 +107,18 @@ gate_state() {
   # A dropped connection must read as "not known yet", never as a failed gate or a node crash.
   state="$(gh release download update-channel-core -R "$UPDATES" -p qualification-state.json -O - 2>/dev/null)" || return 1
   [ -n "$state" ] || return 1
+  # Cores the stable catalog already offers for this shell contract carry over without another run.
+  local index contract
+  index="$(gh release download update-channel-core-stable -R "$UPDATES" -p dsh-core-index-windows-x64.json -O - 2>/dev/null)" || index='{}'
+  contract="$(node scripts/shell-contract.mjs number)"
   printf '%s' "$state" \
-    | HEAD_SHORT="${HEAD_SHA:0:7}" node --input-type=module -e "
+    | HEAD_SHORT="${HEAD_SHA:0:7}" CATALOG_INDEX="$index" SHELL_CONTRACT="$contract" node --input-type=module -e "
       import { comparePortableVersions, coreWindow } from './launcher/update-core.mjs'
       let s = ''
       for await (const chunk of process.stdin) s += chunk
       const rows = JSON.parse(s)
+      const catalog = JSON.parse(process.env.CATALOG_INDEX || '{}')
+      const contract = Number(process.env.SHELL_CONTRACT)
       const versions = coreWindow([...new Set(rows.map(row => row.version))].sort((a, b) => comparePortableVersions(b, a)))
       const here = rows.filter(row => row.sourceSha.startsWith(process.env.HEAD_SHORT))
       // A core that was deliberately blocked and has never qualified on any shell was never offered to users, so
@@ -120,7 +126,8 @@ gate_state() {
       const everQualified = new Set(rows.filter(row => row.status === 'success').map(row => row.version))
       const lines = versions.map(version => {
         const row = here.find(item => item.version === version)
-        const status = row ? row.status : 'pending'
+        const carried = (catalog.versions ?? []).some(entry => entry.version === version && entry.manifest?.requiredShellContract === contract)
+        const status = row ? row.status : carried ? 'success' : 'pending'
         return version + ' ' + (status === 'blocked' && !everQualified.has(version) ? 'excused' : status)
       })
       console.log(lines.join('; '))
