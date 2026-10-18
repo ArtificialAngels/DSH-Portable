@@ -233,8 +233,9 @@ try {
     $Screen = [System.Windows.Forms.Screen]::FromHandle($Process.MainWindowHandle)
     $WorkArea = $Screen.WorkingArea
     $Monitor = $Screen.Bounds
-    if ($Info[2] -ne $WorkArea.Left - $Monitor.Left -or $Info[3] -ne $WorkArea.Top - $Monitor.Top -or $Info[4] -ne $WorkArea.Width -or $Info[5] -ne $WorkArea.Height) {
-        throw "Maximizing would not stop at the work area (position $($Info[2]),$($Info[3]) size $($Info[4])x$($Info[5]); work area $($WorkArea.Left),$($WorkArea.Top) $($WorkArea.Width)x$($WorkArea.Height))"
+    # MINMAXINFO: [2],[3] = ptMaxSize, [4],[5] = ptMaxPosition (position is relative to the monitor).
+    if ($Info[2] -ne $WorkArea.Width -or $Info[3] -ne $WorkArea.Height -or $Info[4] -ne $WorkArea.Left - $Monitor.Left -or $Info[5] -ne $WorkArea.Top - $Monitor.Top) {
+        throw "Maximizing would not stop at the work area (size $($Info[2])x$($Info[3]) position $($Info[4]),$($Info[5]); work area $($WorkArea.Left),$($WorkArea.Top) $($WorkArea.Width)x$($WorkArea.Height))"
     }
 
     $AppId = [WindowAppIdentity]::GetAppUserModelId($Process.MainWindowHandle)

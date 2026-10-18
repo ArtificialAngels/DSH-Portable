@@ -123,8 +123,8 @@ namespace DshPortable
                 Rectangle work = screen.WorkingArea, monitor = screen.Bounds;
                 int[] info = new int[10];
                 Marshal.Copy(message.LParam, info, 0, info.Length);
-                info[2] = work.Left - monitor.Left; info[3] = work.Top - monitor.Top;   // ptMaxPosition
-                info[4] = work.Width; info[5] = work.Height;                             // ptMaxSize
+                info[2] = work.Width; info[3] = work.Height;                             // ptMaxSize
+                info[4] = work.Left - monitor.Left; info[5] = work.Top - monitor.Top;   // ptMaxPosition
                 Marshal.Copy(info, 0, message.LParam, info.Length);
                 message.Result = IntPtr.Zero;
                 return;

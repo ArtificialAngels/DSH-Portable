@@ -252,7 +252,7 @@ test('Windows desktop uses compact native chrome without sacrificing resize or S
   assert.match(host, /ShowIcon\s*=\s*true/)
   assert.match(host, /Text\s*=\s*"DeepSeek Harness";/, 'the taskbar button needs the product title even though no caption is drawn')
   const chrome = await readFile(new URL('../launcher/windows/LauncherWindow.Chrome.cs', import.meta.url), 'utf8')
-  assert.match(chrome, /message\.Msg == 0x0024[\s\S]*?info\[2\] = work\.Left - monitor\.Left[\s\S]*?info\[5\] = work\.Height/, 'maximizing stops at the work area instead of covering the taskbar')
+  assert.match(chrome, /message\.Msg == 0x0024[\s\S]*?info\[2\] = work\.Width; info\[3\] = work\.Height;[\s\S]*?info\[4\] = work\.Left - monitor\.Left; info\[5\] = work\.Top - monitor\.Top/, 'maximizing stops at the work area instead of covering the taskbar')
   assert.match(host, /DwmwaUseImmersiveDarkMode\s*=\s*20/)
   assert.match(host, /DwmwaCaptionColor\s*=\s*35/)
   assert.match(host, /DwmwaTextColor\s*=\s*36/)
