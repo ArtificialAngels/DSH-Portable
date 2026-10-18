@@ -51,6 +51,9 @@ public static class WindowAppIdentity {
     [DllImport("user32.dll")]
     public static extern bool ShowWindow(IntPtr hwnd, int command);
 
+    [DllImport("user32.dll")]
+    public static extern bool IsZoomed(IntPtr hwnd);
+
     [DllImport("shell32.dll", PreserveSig = true)]
     private static extern int SHGetPropertyStoreForWindow(IntPtr hwnd, ref Guid iid, out IntPtr propertyStore);
 
@@ -219,8 +222,10 @@ try {
 
     # Maximizing must stop at the work area: an outer frame that spills past it covers the taskbar.
     Add-Type -AssemblyName System.Windows.Forms
+    [void][WindowAppIdentity]::SetWindowPos($Process.MainWindowHandle, [IntPtr]::Zero, 100, 100, 900, 620, 0x0214)
     [void][WindowAppIdentity]::ShowWindow($Process.MainWindowHandle, 3)
     Start-Sleep -Milliseconds 800
+    if (-not [WindowAppIdentity]::IsZoomed($Process.MainWindowHandle)) { throw 'The desktop window did not maximize.' }
     $MaximizedRect = [WindowAppIdentity+Rect]::new()
     if (-not [WindowAppIdentity]::GetWindowRect($Process.MainWindowHandle, [ref]$MaximizedRect)) { throw 'Could not measure the maximized desktop window.' }
     $WorkArea = [System.Windows.Forms.Screen]::FromHandle($Process.MainWindowHandle).WorkingArea
