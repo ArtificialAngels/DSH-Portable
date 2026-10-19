@@ -233,9 +233,9 @@ namespace DshPortable
             file.DropDownItems.Add(CreateTerminalItem());
             file.DropDownItems.Add(new ToolStripSeparator());
             AddDesktopCommand(file, "close", L("关闭窗口", "Close window"), Keys.Control | Keys.W, delegate { Close(); });
-            AddDesktopCommand(file, "restart", L("重启 DeepSeek Harness", "Restart DeepSeek Harness"), Keys.None,
+            AddDesktopCommand(file, "restart", L("重启", "Restart"), Keys.None,
                 delegate { RequestDesktopRestart(); });
-            AddDesktopCommand(file, "exit", L("退出 DeepSeek Harness", "Exit DeepSeek Harness"), Keys.Control | Keys.Q,
+            AddDesktopCommand(file, "exit", L("退出", "Exit"), Keys.Control | Keys.Q,
                 delegate { if (!shutdownRunning) BeginDesktopShutdown(); });
             AddDesktopCommand(view, "reload", L("重新加载界面", "Reload interface"), Keys.Control | Keys.R,
                 delegate { ScheduleWebViewRecovery(false, "desktop-menu"); });
