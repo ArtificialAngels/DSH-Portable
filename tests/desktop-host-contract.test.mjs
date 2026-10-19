@@ -791,6 +791,6 @@ test('macOS and Linux offer Restart from their menus, refusing while a task runs
   assert.match(swift, /restartFromMenu[\s\S]*?hasRunningSession[\s\S]*?restartAfterShutdown = true\s*beginShutdown\(\)/)
   assert.match(swift, /action: #selector\(restartFromMenu\(_:\)\)/)
   const rust = await readFile(new URL('../launcher/linux/src/main.rs', import.meta.url), 'utf8')
-  assert.match(rust, /&terminal, &restart, &quit/)
+  assert.match(rust, /&terminal,\s*&restart,\s*&quit/)
   assert.match(rust, /"restart" => \{[\s\S]*?HAS_RUNNING_SESSION[\s\S]*?restart_linux_host\(app\.clone\(\)\)/)
 })

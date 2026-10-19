@@ -1105,7 +1105,15 @@ fn setup_tray(app: &tauri::AppHandle, layout: &ProductLayout) -> tauri::Result<(
     )?;
     let menu = Menu::with_items(
         app,
-        &[&open, &update, &engine_update, &startup, &terminal, &restart, &quit],
+        &[
+            &open,
+            &update,
+            &engine_update,
+            &startup,
+            &terminal,
+            &restart,
+            &quit,
+        ],
     )?;
     let startup_for_event = startup.clone();
     TrayIconBuilder::new()
