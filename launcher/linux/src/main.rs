@@ -1089,6 +1089,13 @@ fn setup_tray(app: &tauri::AppHandle, layout: &ProductLayout) -> tauri::Result<(
         true,
         None::<&str>,
     )?;
+    let restart = MenuItem::with_id(
+        app,
+        "restart",
+        text(layout, "重启", "Restart"),
+        true,
+        None::<&str>,
+    )?;
     let quit = MenuItem::with_id(
         app,
         "quit",
@@ -1098,7 +1105,7 @@ fn setup_tray(app: &tauri::AppHandle, layout: &ProductLayout) -> tauri::Result<(
     )?;
     let menu = Menu::with_items(
         app,
-        &[&open, &update, &engine_update, &startup, &terminal, &quit],
+        &[&open, &update, &engine_update, &startup, &terminal, &restart, &quit],
     )?;
     let startup_for_event = startup.clone();
     TrayIconBuilder::new()
@@ -1133,6 +1140,24 @@ fn setup_tray(app: &tauri::AppHandle, layout: &ProductLayout) -> tauri::Result<(
                     if let Err(error) = open_dsh_terminal(layout) {
                         dialog(PRODUCT_NAME, &error, MessageLevel::Error);
                     }
+                }
+            }
+            "restart" => {
+                // The same restart the plugin market asks for. A running task is never interrupted.
+                if HAS_RUNNING_SESSION.load(Ordering::SeqCst) {
+                    if let Some(layout) = LAYOUT.get() {
+                        dialog(
+                            PRODUCT_NAME,
+                            &text(
+                                layout,
+                                "任务仍在运行；完成后再重启即可，当前任务不会被中断。",
+                                "A task is still running. Restart after it finishes; the current task was not interrupted.",
+                            ),
+                            MessageLevel::Info,
+                        );
+                    }
+                } else {
+                    restart_linux_host(app.clone());
                 }
             }
             "quit" => stop_and_exit(app.clone()),

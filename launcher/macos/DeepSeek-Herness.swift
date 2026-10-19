@@ -231,6 +231,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelega
         report.target = self
         applicationMenu.addItem(report)
         applicationMenu.addItem(.separator())
+        let restart = NSMenuItem(title: L("重启", "Restart"),
+                                 action: #selector(restartFromMenu(_:)), keyEquivalent: "")
+        restart.target = self
+        applicationMenu.addItem(restart)
         let quit = NSMenuItem(title: L("退出 DSH-Portable", "Quit DSH-Portable"),
                              action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
@@ -301,6 +305,21 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelega
             try? FileManager.default.createDirectory(at: productDataRoot, withIntermediateDirectories: true)
             try? data.write(to: launcherSettingsURL, options: .atomic)
         }
+    }
+
+    // The same restart the plugin market asks for, started from the menu. A running task is never interrupted.
+    @objc private func restartFromMenu(_ sender: NSMenuItem) {
+        guard !shuttingDown else { return }
+        if hasRunningSession {
+            let alert = NSAlert()
+            alert.messageText = L("任务仍在运行", "A task is still running")
+            alert.informativeText = L("任务仍在运行；完成后再重启即可，当前任务不会被中断。",
+                                      "A task is still running. Restart after it finishes; the current task was not interrupted.")
+            alert.runModal()
+            return
+        }
+        restartAfterShutdown = true
+        beginShutdown()
     }
 
     @objc private func openDshTerminal(_ sender: NSMenuItem) {
