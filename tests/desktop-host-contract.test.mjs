@@ -785,3 +785,12 @@ test('equivalent window-boundary model covers unplugged, smaller, oversized, spa
     assert.ok(area, `${item.name}: restored window and draggable title bar must be fully visible`)
   }
 })
+
+test('macOS and Linux offer Restart from their menus, refusing while a task runs', async () => {
+  const swift = await readFile(new URL('../launcher/macos/DeepSeek-Herness.swift', import.meta.url), 'utf8')
+  assert.match(swift, /restartFromMenu[\s\S]*?hasRunningSession[\s\S]*?restartAfterShutdown = true\s*beginShutdown\(\)/)
+  assert.match(swift, /action: #selector\(restartFromMenu\(_:\)\)/)
+  const rust = await readFile(new URL('../launcher/linux/src/main.rs', import.meta.url), 'utf8')
+  assert.match(rust, /&terminal, &restart, &quit/)
+  assert.match(rust, /"restart" => \{[\s\S]*?HAS_RUNNING_SESSION[\s\S]*?restart_linux_host\(app\.clone\(\)\)/)
+})
