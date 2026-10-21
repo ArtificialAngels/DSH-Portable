@@ -402,6 +402,13 @@ try {
   await new Promise(resolve => setTimeout(resolve, 200))
   await capture(client, '03-general-settings.png')
 
+  // The maintenance controls can be below the migration row in a short window.
+  await evaluate(client, `(() => {
+    const dialog = [...document.querySelectorAll('[role="dialog"]')].find(item => /桌面与数据|Desktop & data/.test(item.textContent || ''))
+    const button = dialog && [...dialog.querySelectorAll('button')].find(item => ['更多', 'More'].includes((item.getAttribute('aria-label') || item.textContent || '').trim()))
+    button?.scrollIntoView({ block: 'center' })
+  })()`)
+  await new Promise(resolve => setTimeout(resolve, 200))
   const more = await evaluate(client, clickButton(['更多', 'More']))
   assert.equal(more.clicked, true, `maintenance menu unavailable: ${JSON.stringify(more)}`)
   await waitForValue(client, clickChoice(['导出支持报告', 'Export support report']), value => value?.clicked, 'support report action')

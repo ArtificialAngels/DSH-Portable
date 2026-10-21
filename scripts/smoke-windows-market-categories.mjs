@@ -20,7 +20,7 @@ const env = { ...process.env, DSH_PORTABLE_ROOT: root, DSH_PORTABLE_STATE_ROOT: 
   DSH_PORTABLE_RUNTIME_CACHE: path.join(root, 'acceptance-runtime-cache'),
   DSH_PORTABLE_WEBVIEW_CACHE: path.join(root, 'acceptance-webview-cache'),
   DSH_PORTABLE_TEST_HIDDEN: '1', DSH_PORTABLE_TEST_AUTOMATION: '1', DSH_PORTABLE_SKIP_UPDATE_CHECK: '1',
-  // This suite exercises Portable's own market; the official Discover tab replaces it when switched on.
+  // This suite needs a fresh profile: this flag skips setup, but does not disable an already enabled Discover bundle.
   DSH_PORTABLE_OFFICIAL_MARKET: '0' }
 // A source-overlay probe must not load immutable server sources from the old
 // release capsule while serving new client files off disk.
@@ -117,7 +117,7 @@ try {
       .filter(item => item.getBoundingClientRect().width > 0)
     if (dialogs.length) return false
     const settings = [...document.querySelectorAll('button')].find(item =>
-      ['Settings', '设置', 'More', '更多', 'Account menu', '账号菜单'].includes((item.textContent || '').trim()))
+      ['Settings', '设置', 'More', '更多', 'Account menu', '账号菜单'].includes((item.getAttribute('aria-label') || item.textContent || '').trim()))
     return Boolean(settings && settings.getBoundingClientRect().width > 0 && !settings.closest('[inert]'))
   })()`, ready => ready && completedCredentialOnboarding, 'credential onboarding finishes before settings navigation')
   await until(nativeStateExpression(), state => state.nativeLoadingVisible === false, 'native workspace handoff completes')
