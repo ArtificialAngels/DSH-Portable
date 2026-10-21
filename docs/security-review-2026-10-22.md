@@ -38,8 +38,24 @@ No confirmed exploitable vulnerability was identified in the reported flows unde
 
 The task evidence includes a JSON review inventory recording every received ID exactly once, with its rule, current source location, source/caller evidence and group-specific rationale. Raw API pages and both SARIF snapshots were also retained with the task evidence for independent readback; they contain code-scanning metadata, not credentials. The repository retains this short review table only.
 
+The improved full main scan on `1319ed7` found or reopened 20 additional alerts. Their SARIF paths were reviewed separately rather than inheriting the earlier dispositions:
+
+| Alert IDs | Source and boundary checked |
+| --- | --- |
+| 1493-1495, 1502-1503 | Native window-state persistence uses fixed `data/window-state.json` and `.tmp` paths beneath the startup-selected state root. The reported source is OS-resolved LocalApplicationData; window events and Web messages cannot choose the path. |
+| 1496-1498, 1504-1505 | Native settings persistence uses fixed `data/launcher-settings.json`, `.tmp` and `.bak` paths. Web preferences can change validated values, not these paths; named environment identifiers are validated. |
+| 1489-1491, 1501 | Desktop host records and log directories have fixed suffixes under the same local root. Reading the fixed `desktop-host.pid` also checks the referenced process executable identity. |
+| 1488, 1492 | The native Help menu opens the fixed log directory with `ProcessStartInfo(directory)` after directory creation. No shell command or argument string is assembled; no Web message selects the directory or invokes this menu action. |
+| 1499 | Diagnostic log-tail reading uses fixed launcher/host log filenames from the local state root, not a request-selected file. |
+| 1454-1455 | The preparation CLI derives its base state root from the already validated environment layout, then passes it as an environment value to the fixed local executable. No Web-message filename or command is inserted. |
+| 1500 | The screenshot fixture writes its operator/CI-selected output path from its command line. It has no product request handler and runs without elevation. |
+
+These 20 alerts were individually marked false positive with the reasons above. Paginated readbacks then returned zero open CodeQL, Dependabot and secret-scanning alerts. The main C# analysis scanned 27/27 files and no longer reported low analysis quality; its four unresolved Windows notification types remain documented below.
+
 The minimum change for these reported flows is this review evidence, rather than removing supported local-root configuration or adding ineffective sanitizers. The task evidence retains all 143 disposition responses and the final paginated readback. Same-user filesystem races, malicious installed plugins executing with the host's authority, and a full application security audit are not eliminated or certified by this review. If a lower-trust HTTP/IPC caller gains control over one of these roots or execution arguments, review that path again.
 
 The analysis-only project at `config/codeql/Dependencies.csproj` supplies NuGet dependency metadata to the default C# scan. Keep its WebView2/notification versions aligned with `upstream.lock.json`. It is only for dependency restoration, not a product build target: the independently compiled executables contain separate assembly attributes. Product packaging still uses the existing build scripts and does not ship this project. Extraction quality must be checked after a full scan; a PR overlay can retain the earlier database's diagnostics when only dependency metadata changes.
 
 Validation: [full PR analysis 39640762970](https://github.com/WSL043/DSH-Portable/actions/runs/39640762970) on `26cd8e6` discovered 27 C# source files, restored eight packages and completed with the successful build-mode-none diagnostic, without the low-quality diagnostic. The stale, regenerable C# overlay-base caches were invalidated before this run. Four unresolved types remain in `Windows.UI.Notifications`; this is a documented limitation of the no-build analysis, not a reason to disable scanning or claim complete type resolution. Other language analyses and PR contracts passed. The dependency fix's main [full artifact acceptance 39637847106](https://github.com/WSL043/DSH-Portable/actions/runs/39637847106) passed all 39 jobs without reruns. No release was created.
+
+After merging the analysis metadata in #178, main `1319ed7` passed [all 39 artifact/acceptance jobs](https://github.com/WSL043/DSH-Portable/actions/runs/39641220327) on the first attempt. Its [four-language CodeQL run](https://github.com/WSL043/DSH-Portable/actions/runs/39641221156) also succeeded; the C# log confirms 27/27 files scanned and no low-quality diagnostic. The follow-up review changed documentation and individual alert dispositions only.
