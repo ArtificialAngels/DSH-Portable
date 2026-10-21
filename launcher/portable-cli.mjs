@@ -1,4 +1,5 @@
 import { appendLauncherLog } from './launcher-log.mjs'
+import { applyPluginStorage } from './plugin-storage.mjs'
 import { defaultBrowserSpec } from './browser-fallback.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { randomBytes, randomUUID } from 'node:crypto'
@@ -607,6 +608,12 @@ async function startAttempt(noBrowser, portRetry, startedAt) {
     profiles: repairedPluginProfiles.profiles.length,
   })
 
+  const storage = await applyPluginStorage({
+    layout,
+    log: message => appendLauncherLog(layout.logsDir, `${new Date().toISOString()} ${message}\n`),
+  })
+  if (storage.failed) throw new Error(`Plugin storage conflicts prevent startup. ${storage.entries.filter(item => item.error).map(item => item.error).join('; ')}`)
+
   const portReservation = await reservePort(prior?.port)
   const port = portReservation.port
   startupLog(startedAt, 'port-reserved', { port })
@@ -1015,13 +1022,14 @@ async function main() {
     'repair',
     'recovery-pause-plugin',
     'recovery-restore-plugin',
+    'plugin-storage-migrate',
   ])
   let releaseProduct = async () => {}
   try {
     if (productLockedCommands.has(options.command)) releaseProduct = await acquireProductMutationLockWithWait(layout, Math.max(5000, options.waitForLockMs || 0))
     await ensurePortableDirectories(layout)
     if (existsSync(path.join(layout.dataDir, 'runtime', 'data-import.json'))
-      && ['backup-data', 'update', 'recover-update', 'runtime-cache-clean', 'recovery-pause-plugin', 'recovery-restore-plugin'].includes(options.command)) {
+      && ['backup-data', 'update', 'recover-update', 'runtime-cache-clean', 'recovery-pause-plugin', 'recovery-restore-plugin', 'plugin-storage-migrate'].includes(options.command)) {
       throw Object.assign(new Error('Recover the interrupted data import with Portable repair before changing this environment.'), { code: 'DSH_DATA_IMPORT_RECOVERY_REQUIRED' })
     }
     let recovery = { status: 'none' }
@@ -1051,6 +1059,12 @@ async function main() {
     }
     else if (options.command === 'start') result = await start(options.noBrowser)
     else if (options.command === 'stop') result = await stop()
+    else if (options.command === 'plugin-storage-migrate') {
+      await assertSharedComponentsIdle()
+      if (existsSync(layout.updateJournal)) throw new Error('Recover the interrupted product update before migrating plugin storage.')
+      result = await applyPluginStorage({ layout, mode: 'migrate' })
+      if (result.failed) process.exitCode = 1
+    }
     else if (options.command === 'open') result = await openExisting()
     else if (options.command === 'doctor') result = await doctor()
     else if (options.command === 'repair') result = await repair()
