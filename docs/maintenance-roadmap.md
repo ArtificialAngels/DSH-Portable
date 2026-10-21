@@ -4,16 +4,16 @@
 
 ## 当前维护状态（2026-10-22 更新）
 
-稳定版仍为 [0.9.3](https://github.com/WSL043/DSH-Portable/releases/tag/v0.9.3)。本轮不发布版本；重启菜单、设置页样式、升级演练及无引用代码清理已在 main，留待下一批。0.x Native 与 1.0 纯便携 alpha 两条线继续保留；旧通道兼容代码仍服务旧客户端，不按无用代码删除。
+稳定版 [0.9.4](https://github.com/WSL043/DSH-Portable/releases/tag/v0.9.4) 已发布并进入应用内更新源；MCP 安全修复、社区插件兼容性、显式插件存储迁移、重启入口和设置页改进已交付。最终成品、内核目录、发布回读和清理证据见[0.9.4 最终成品验收](release-0.9.4-acceptance.md)。0.x Native 与 1.0 纯便携 alpha 两条线继续保留；旧通道兼容代码仍服务旧客户端，不按无用代码删除。
 
 | 项目 | 当前状态与下一步 |
 | --- | --- |
-| 主分支 CI | #178 合入后的[构建 39641220327](https://github.com/WSL043/DSH-Portable/actions/runs/39641220327) 已成功，39/39 项任务通过且无重跑；四语言 CodeQL 也成功，C# 低分析质量警告已消除。仅补充依赖元数据与文档，未发布版本。 |
-| 内核目录 | [更新仓库同步](https://github.com/WSL043/DSH-Portable-Updates/actions/runs/39594014772)成功。规则为最新五个、至少两个 RC/正式版；当前目录实际提供 rc.2、rc.1、alpha.5，alpha.4/alpha.3 被图片插件 0.1.15 的 peer 声明阻断。 |
+| 主分支 CI | 产品提交 `79602ae` 的[构建 39652186374](https://github.com/WSL043/DSH-Portable/actions/runs/39652186374) 39/39 成功；GitHub 终态延迟的一次定向复验及不变的 Windows artifact 身份保留在验收记录。工具提交 `5a574df` 的[构建 39658415409](https://github.com/WSL043/DSH-Portable/actions/runs/39658415409) 39/39 成功，首次 npm 新包 404 在真实下载及摘要恢复后仅作一次 failed-only 复验；四语言 CodeQL 成功。发布成品仍固定 `79602ae`。 |
+| 内核目录 | 最新五个、至少两个 RC/正式版的规则不变；rc.2、rc.1、alpha.5 已用 0.9.4 源码重建并进入五平台 contract 2 目录，三个 Windows 公开包的 MCP client/core 2.3.0 已回读。alpha.4/alpha.3 仍由图片插件 0.1.15 的 peer 声明阻断，不发布；运行和目录证据见[0.9.4 最终成品验收](release-0.9.4-acceptance.md)。 |
 | 默认插件 | [Image Viewer #9](https://github.com/WSL043/dsh-image-viewer/pull/9)、[Chat Manager #29](https://github.com/WSL043/dsh-chat-manager/pull/29)（五版本兼容窗口）及 [#28](https://github.com/WSL043/dsh-chat-manager/pull/28)（归档页样式）仍开放。已有行为/交付检查通过；两个兼容窗口 PR 的端到端矩阵被跳过，不能称为新增内核验收完成。合并会触发插件自动发布，继续等下次发布安排。 |
-| 社区插件启用状态 | [Portable #175](https://github.com/WSL043/DSH-Portable/pull/175) 将启动和打包的预发布版 peer 判断统一为官方 `dsh-app-boot` 使用的 `includePrerelease: true`。真实 semver、实际 tgz 打包校验及连续两次启动扫描的 8 项测试通过：兼容插件保持启用，精确版本和越界版本仍被拒绝，依赖文件保留。相关启动、恢复及配置事务测试另有 42 项通过、1 项按平台跳过；这些是源码行为验收，不代表六个社区插件的完整 UI/业务功能均已验收或修复已随版本发布。 |
-| 第三方插件数据 | [Portable #174](https://github.com/WSL043/DSH-Portable/pull/174) 已改为显式 `plugin-storage migrate`，退出不再迁移；拒绝已有目标、其他实例链接和运行中的环境，保留原始备份。Windows 实机已验证真实插件 SQLite 读写、浏览器插件启停、跨环境拒绝、文件占用失败保全及目录移动后重连；完整回归 1172 通过、14 跳过。本机原生 WebView 的 `E_UNEXPECTED` 已定位为验收副本继承低完整性标签：同 SHA-256 的 EXE 换到普通用户临时目录即正常启动；随后以 `1f55558` 源码重编原生宿主，完整启动转场、工作区、设置环境及关闭验收通过。未改产品初始化逻辑。无 manifest 的用户不受影响；本轮不发布。 |
-| 依赖安全更新 | [Dependabot #5](https://github.com/WSL043/DSH-Portable/security/dependabot/5)：将受影响的 MCP client 2.x 请求统一覆盖至 2.3.0，锁文件仅升级 client/core 两包，DSH 版本不变。实际 DSH 消费者解析与导入通过；本机 307/308 跨域跳转没有转发测试密钥、会话 ID、MCP 请求体或 OAuth 凭据，同域 POST 保持正常。依赖审计为 0，全仓 1178 通过、14 跳过；修复经 #177 合入 main，GitHub 已自动将 #5 标为 Fixed（未手工忽略）；合入前完整 CI 39/39 通过，合入后[构建 39637847106](https://github.com/WSL043/DSH-Portable/actions/runs/39637847106)也已 39/39 通过，无重跑，本轮不发布。 |
+| 社区插件启用状态 | [Portable #175](https://github.com/WSL043/DSH-Portable/pull/175) 将启动和打包的预发布版 peer 判断统一为官方 `dsh-app-boot` 使用的 `includePrerelease: true`。真实 semver、实际 tgz 打包校验及连续两次启动扫描的 8 项测试通过：兼容插件保持启用，精确版本和越界版本仍被拒绝，依赖文件保留。相关启动、恢复及配置事务测试另有 42 项通过、1 项按平台跳过；修复已随 0.9.4 发布；上述证据不代表六个社区插件的完整 UI/业务功能均已验收。 |
+| 第三方插件数据 | [Portable #174](https://github.com/WSL043/DSH-Portable/pull/174) 已改为显式 `plugin-storage migrate`，退出不再迁移；拒绝已有目标、其他实例链接和运行中的环境，保留原始备份。Windows 实机已验证真实插件 SQLite 读写、浏览器插件启停、跨环境拒绝、文件占用失败保全及目录移动后重连；完整回归 1172 通过、14 跳过。本机原生 WebView 的 `E_UNEXPECTED` 已定位为验收副本继承低完整性标签：同 SHA-256 的 EXE 换到普通用户临时目录即正常启动；随后以 `1f55558` 源码重编原生宿主，完整启动转场、工作区、设置环境及关闭验收通过。未改产品初始化逻辑。无 manifest 的用户不受影响；修复已随 0.9.4 发布。 |
+| 依赖安全更新 | [Dependabot #5](https://github.com/WSL043/DSH-Portable/security/dependabot/5)：将受影响的 MCP client 2.x 请求统一覆盖至 2.3.0，锁文件仅升级 client/core 两包，DSH 版本不变。实际 DSH 消费者解析与导入通过；本机 307/308 跨域跳转没有转发测试密钥、会话 ID、MCP 请求体或 OAuth 凭据，同域 POST 保持正常。依赖审计为 0，全仓 1178 通过、14 跳过；修复经 #177 合入 main，GitHub 已自动将 #5 标为 Fixed（未手工忽略）；合入前完整 CI 39/39 通过，合入后[构建 39637847106](https://github.com/WSL043/DSH-Portable/actions/runs/39637847106)也已 39/39 通过，无重跑；修复已随 0.9.4 发布，最终成品及可选内核的依赖回读见[0.9.4 最终成品验收](release-0.9.4-acceptance.md)。 |
 | CodeQL 告警审查 | [2026-10-22 审查](security-review-2026-10-22.md)覆盖初始 main 上全部 143 条开放告警及扫描改善后新增/重开的 20 条，核对当前提交的 JavaScript/C# SARIF 与具体调用边界，逐条附对应理由标为误报；分页回读开放项为 0，密钥扫描也为 0。保留逐组依据，不关闭查询或排除目录，不以当前 0 代表完整安全审计。补充单个分析依赖项目后，完整扫描已消除 C# 低质量警告；27 个源码仍纳入，仍有 4 个 Windows 通知类型无法解析，详见审查记录。 |
 
 上述四个仓库没有开放的普通 issue；待办还包含 PR、依赖告警和下方历史台账，不能据此宣称全部完成。发布流程以 [runbook](stable-release-runbook.md) 和 [shell contract](shell-contract.md) 为准；性能基线见 [启动性能](startup-performance-2026-10-15.md)及[内存占用](memory-footprint-2026-10-16.md)，只优化测得的本项目开销，不裁掉官方组件。
@@ -35,7 +35,7 @@
 | A01 预览身份 | 独立候选胶囊与 SHA，不改共享缓存 | 隔离预览生成流程自己的最终原生资格记录 |
 | A02 默认插件 | 0.7.5 锁定正式插件；归档、删除、标注、启停、卸载重装原生验收及发布 | 明确旧插件版本直接升级到当前锁定包的专项证据 |
 | A03 操作所有权 | 现代官方 profile 锁覆盖市场/CLI、校验及回滚 | 原生 UI、官方 UI、CLI 三方并发成品；旧内核边界收敛 |
-| A04 内核同步 | 可选文案不再阻断；更新仓库修复 Native/Electron 基线误选 | 历史失败组合复验；新可兼容核心发布与客户端可见证明，rc.2 目前未推送 |
+| A04 内核同步 | 可选文案不再阻断；更新仓库修复 Native/Electron 基线误选 | 历史失败组合复验；新可兼容核心发布与客户端可见证明；0.2.1-rc.2 已进入 0.9.4 的 contract 2 内核目录，见[0.9.4 最终成品验收](release-0.9.4-acceptance.md) |
 | A05 安全告警 | 本批 154 条按数据源和调用者逐项甄别并附理由处置；CodeQL/Dependabot 回读均为 0 | 本次积压处置完成；新变更仍继续扫描，不把当前 0 当全面安全证明 |
 | A06 行内插件更新 | 隔离原生真实更新和重启已有记录 | 最终不可变产物的自然失败、重试、旧版升级链路 |
 | A07 市场职责 | 删除死路由与无效队列，操作交接官方锁 | 发现、版本检查与旧管理适配的模块边界；不再扩大市场视觉设计 |
