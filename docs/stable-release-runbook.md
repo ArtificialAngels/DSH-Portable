@@ -19,12 +19,20 @@ scripts/ship-stable.sh x.y.z
 
 `ship-stable.sh` 的顺序是**先验内核、后让用户看到新版**：
 
-1. 等 main 上对应提交的构建通过（构建里有一项靠重跑才过，不算数，先查原因）。
+1. 等 main 上对应提交的构建通过。失败先查原因，不能靠反复重跑掩盖产品失败。仅在确认 GitHub 终态延迟或 npm 新包元数据先于压缩包可用等外部故障、保留原日志并取得恢复证据后，允许一次不改输入的定向复验；npm 下载恢复还须核对完整性摘要。再次失败继续诊断，不扩大重跑或放宽断言。
 2. 触发“Publish tested release”，但 `publish_feed=false`：Release 和下载包已发布，应用内更新源**不翻**，已安装的用户还停在上一个版本。
 3. 检查**最新五个内核、至少两个 RC 或正式版**的窗口。同一 `requiredShellContract` 下 stable 目录已经提供的内核可沿用验收；其余触发更新仓库的“Sync verified DSH core”，在本次发布提交上验收。窗口内曾被 `blocked` 且从未在任何外壳验收成功的内核记为 `excused`，不会发布，也不阻挡外壳发布。其他 `failed`/`blocked` 会退出，更新源保持不变；仍有 `pending` 时继续等待。
 4. 全部通过后再用 `publish_feed=true` 翻更新源。
 
 内核验收失败时：修原因（多半是更新仓库的验收脚本或补丁锚点），再运行 `scripts/ship-stable.sh x.y.z --resume`。只有紧急情况才用 `--skip-gate`（发布并立刻翻更新源）。
+
+更新仓库已有其他内核随后发布时，不要 rerun 旧运行来恢复发布：旧 resolve/selection/qualification-state 快照可能覆盖新记录，使目录或资格状态回退。保留原失败与当前目录。下面的 fresh dispatch 只适用于重验当前 Portable `upstream.lock.json` 锁定的内核（本次为 0.2.1-rc.2），让它重新读取已发布状态；它不是指定任意失败内核的通用恢复命令：
+
+```bash
+gh workflow run sync-core.yml --repo WSL043/DSH-Portable-Updates --ref main -f remaining=0 -f accepted_only=false -f rebuild=true
+```
+
+回读新运行的 selection、资格状态及五平台目录，确认选中的内核和其他已发布项均正确；该命令不自动证明旧失败已解除。
 
 背景：Portable 的整包更新会整体替换程序；用户在目标外壳还没有兼容内核时升级，可能丢掉自己选的内核（issue #163）。现在内核以 `requiredShellContract` 匹配外壳，接口号相同可沿用已验收内核，不必每发一次外壳就重验；没有接口号的旧版本仍按确切版本与指纹匹配，详见 [shell contract](shell-contract.md)。GitHub 的触发接口偶尔连续返回 HTTP 500，脚本每分钟重试一次。
 
