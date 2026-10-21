@@ -1,0 +1,31 @@
+{
+  "version": "0.9.4",
+  "zh": {
+    "summary": "修复 MCP 跨域重定向的凭据泄露风险，保留兼容社区插件的启用状态，并让第三方插件数据迁移变为明确、安全的手动操作。",
+    "highlights": [
+      "安全：MCP client/core 升级至 2.3.0，阻止跨域重定向转发请求中的凭据和会话数据。",
+      "插件：修正预发布内核的兼容性判断，避免兼容的社区插件在启动后被错误禁用；不兼容版本仍会被拒绝。",
+      "数据：第三方插件存储改为通过 plugin-storage migrate 显式迁移；退出时不再自动迁移，遇到目标冲突、文件占用或运行中的环境会停止并保留原数据。",
+      "界面：补充应用菜单和托盘的重启入口，运行任务时阻止重启；整理设置页样式。"
+    ],
+    "upgradeNotes": [
+      "沿用 0.9.3 已锁定的 DSH 内核和默认插件版本；可选内核重新打包验收，旧胶囊不会重新引入修复前的 MCP 依赖。",
+      "现有便携目录不会自动迁移第三方插件存储；没有迁移 manifest 的用户不受该功能影响。",
+      "升级前请正常退出应用，并保留重要会话和数据备份。"
+    ]
+  },
+  "en": {
+    "summary": "Fixes MCP credential forwarding across origins, preserves compatible community plugins, and makes third-party plugin storage migration an explicit operation.",
+    "highlights": [
+      "Security: updates MCP client/core to 2.3.0 to prevent cross-origin redirects from forwarding credentials and session data.",
+      "Plugins: corrects compatibility checks on prerelease cores so compatible community plugins stay enabled; incompatible versions remain rejected.",
+      "Data: third-party plugin storage now migrates only through plugin-storage migrate. Exit no longer triggers migration; destination conflicts, locked files and running environments stop the operation while preserving source data.",
+      "Interface: adds restart actions to application and tray menus, guards against restarting during active tasks, and tidies settings styling."
+    ],
+    "upgradeNotes": [
+      "Keeps the DSH core and default plugin versions pinned in 0.9.3; selectable cores are repackaged and qualified so older capsules cannot reintroduce the vulnerable MCP dependency.",
+      "Existing portable folders do not automatically migrate third-party plugin storage; users without a migration manifest are unaffected.",
+      "Exit the application normally before upgrading and keep backups of important sessions and data."
+    ]
+  }
+}
