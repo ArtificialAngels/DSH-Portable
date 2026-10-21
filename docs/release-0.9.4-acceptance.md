@@ -2,6 +2,8 @@
 
 产品提交：`79602aed3fd1f6e092b5560bd8deb07fbf29f676`。本记录的测试脚本修正不改变产品成品。
 
+致谢：感谢 [@ArtificialAngels](https://github.com/ArtificialAngels) 对第三方插件数据便携化（[#174](https://github.com/WSL043/DSH-Portable/pull/174)）及预发布内核下社区插件兼容性修复（[#175](https://github.com/WSL043/DSH-Portable/pull/175)）的原始贡献。
+
 ## 成品与安全
 
 - CI 39652186374，39/39 项成功。GitHub Actions 终态更新延迟导致一个已完成的 Linux x64 job 保持 in_progress；保留原始日志后只复验该任务，attempt 2 恢复明确成功。Windows artifact 12371080775 的 ID、大小及摘要未变。
