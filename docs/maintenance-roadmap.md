@@ -8,14 +8,16 @@
 
 | 项目 | 当前状态与下一步 |
 | --- | --- |
-| 主分支 CI | 合入 #175/#176 后的[构建 39617494044](https://github.com/WSL043/DSH-Portable/actions/runs/39617494044) 已成功，39 项任务的步骤及日志均完成；安全检查、网站和 CodeQL 也通过。该结果不代替后续 #174 的合入后 CI。 |
+| 主分支 CI | 合入 #174 后的[构建 39624952528](https://github.com/WSL043/DSH-Portable/actions/runs/39624952528) 已成功，39/39 项任务通过；安全检查和 CodeQL 也通过。首轮 Windows 组件更新健康检查及 Windows 2022 原生 UI 准备阶段失败，同一提交单次重跑通过，原失败日志保留；未修改产品或放宽验收标准。 |
 | 内核目录 | [更新仓库同步](https://github.com/WSL043/DSH-Portable-Updates/actions/runs/39594014772)成功。规则为最新五个、至少两个 RC/正式版；当前目录实际提供 rc.2、rc.1、alpha.5，alpha.4/alpha.3 被图片插件 0.1.15 的 peer 声明阻断。 |
 | 默认插件 | [Image Viewer #9](https://github.com/WSL043/dsh-image-viewer/pull/9)、[Chat Manager #29](https://github.com/WSL043/dsh-chat-manager/pull/29)（五版本兼容窗口）及 [#28](https://github.com/WSL043/dsh-chat-manager/pull/28)（归档页样式）仍开放。已有行为/交付检查通过；两个兼容窗口 PR 的端到端矩阵被跳过，不能称为新增内核验收完成。合并会触发插件自动发布，继续等下次发布安排。 |
 | 社区插件启用状态 | [Portable #175](https://github.com/WSL043/DSH-Portable/pull/175) 将启动和打包的预发布版 peer 判断统一为官方 `dsh-app-boot` 使用的 `includePrerelease: true`。真实 semver、实际 tgz 打包校验及连续两次启动扫描的 8 项测试通过：兼容插件保持启用，精确版本和越界版本仍被拒绝，依赖文件保留。相关启动、恢复及配置事务测试另有 42 项通过、1 项按平台跳过；这些是源码行为验收，不代表六个社区插件的完整 UI/业务功能均已验收或修复已随版本发布。 |
-| 第三方插件数据 | [Portable #174](https://github.com/WSL043/DSH-Portable/pull/174) 已改为显式 `plugin-storage migrate`，退出不再迁移；拒绝已有目标、其他实例链接和运行中的环境，保留原始备份。Windows 实机已验证真实插件 SQLite 读写、浏览器插件启停、跨环境拒绝、文件占用失败保全及目录移动后重连；完整回归 1172 通过、14 跳过。原生 WebView 在隔离验收环境初始化报 `E_UNEXPECTED`，其窗口验收未通过，不能用浏览器结果代替。无 manifest 的用户不受影响；本轮不发布。 |
+| 第三方插件数据 | [Portable #174](https://github.com/WSL043/DSH-Portable/pull/174) 已改为显式 `plugin-storage migrate`，退出不再迁移；拒绝已有目标、其他实例链接和运行中的环境，保留原始备份。Windows 实机已验证真实插件 SQLite 读写、浏览器插件启停、跨环境拒绝、文件占用失败保全及目录移动后重连；完整回归 1172 通过、14 跳过。本机原生 WebView 的 `E_UNEXPECTED` 已定位为验收副本继承低完整性标签：同 SHA-256 的 EXE 换到普通用户临时目录即正常启动；随后以 `1f55558` 源码重编原生宿主，完整启动转场、工作区、设置环境及关闭验收通过。未改产品初始化逻辑。无 manifest 的用户不受影响；本轮不发布。 |
 | 依赖安全更新 | [Dependabot #5](https://github.com/WSL043/DSH-Portable/security/dependabot/5)：`@modelcontextprotocol/client` 中危告警，修复版为 2.3.0；[自动更新任务](https://github.com/WSL043/DSH-Portable/actions/runs/39482839898)以 `security_update_not_possible` 失败，需单独核对锁文件、覆盖项与实际打包依赖，不以自动任务结束当作修复。 |
 
 上述四个仓库没有开放的普通 issue；待办还包含 PR、依赖告警和下方历史台账，不能据此宣称全部完成。发布流程以 [runbook](stable-release-runbook.md) 和 [shell contract](shell-contract.md) 为准；性能基线见 [启动性能](startup-performance-2026-10-15.md)及[内存占用](memory-footprint-2026-10-16.md)，只优化测得的本项目开销，不裁掉官方组件。
+
+本机原生验收应使用普通用户权限的隔离临时目录。若遇到缓存写入 `EPERM` 或 WebView 控制器初始化失败，先核对 EXE 的 `icacls` 完整性标签和实际进程 token；本次失败进程为 Low（`S-1-16-4096`），调用者为 Medium（`S-1-16-8192`）。[Windows MIC 规则](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control)会让低完整性 EXE 降低子进程权限。保留原失败证据，在正常用户目录复用已校验的运行时做对照；不要为验收改系统 ACL、关闭安全保护或给产品增加盲重试。
 
 ## 历史交付状态（2026-09-28）
 
