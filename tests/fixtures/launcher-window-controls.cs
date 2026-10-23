@@ -65,6 +65,12 @@ internal static class WindowControlsFixture
             Check(form.WindowState == FormWindowState.Maximized, "maximize action");
             message("command", "maximize");
             Check(form.WindowState == FormWindowState.Normal, "existing native menu command reused");
+            message("control", "fullscreen");
+            message("command", "maximize");
+            Check(!(bool)type.GetField("fullscreen", Private).GetValue(form)
+                && form.WindowState == FormWindowState.Maximized, "menu maximize exits fullscreen like window control");
+            bar.Items["caption-maximize"].PerformClick();
+            Check(form.WindowState == FormWindowState.Normal, "caption shares maximize behavior");
             message("control", "minimize");
             Check(form.WindowState == FormWindowState.Minimized, "minimize action");
             form.WindowState = FormWindowState.Normal;
@@ -73,7 +79,16 @@ internal static class WindowControlsFixture
             message("chrome", false);
             Check(bar.Visible && content.Top >= bar.Bottom, "plugin unload restores native layout");
             message("chrome", true);
+            message("control", "maximize");
+            // Use the real recovery guards and a stale saved state so this detects
+            // an accidental RestoreFromTray call on an already visible window.
+            type.GetField("desktopReady", Private).SetValue(form, true);
+            type.GetField("hiddenForAutomation", Private).SetValue(form, false);
+            type.GetField("windowStateBeforeHide", Private).SetValue(form, FormWindowState.Normal);
             invoke("RestoreNativeWindowBar", new object[0]);
+            Check(form.WindowState == FormWindowState.Maximized, "visible window keeps maximized state during native recovery");
+            type.GetField("desktopReady", Private).SetValue(form, false);
+            type.GetField("hiddenForAutomation", Private).SetValue(form, true);
             message("chrome", true);
             Check(bar.Visible, "manual native recovery cannot immediately be hidden again");
             invoke("ResetPageWindowChrome", new object[0]);
