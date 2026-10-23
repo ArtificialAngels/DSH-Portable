@@ -446,13 +446,14 @@ namespace DshPortable
                     Rectangle titleBounds = new Rectangle(12, 0, Math.Max(1, titleRight - 12), e.Item.Height);
                     TextRenderer.DrawText(e.Graphics, dropDownItem.Text, e.TextFont, titleBounds, titleColor,
                         TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter);
+                    // Compact fixed-width items may omit WinForms' separate shortcut pass.
+                    if (!String.IsNullOrEmpty(shortcut))
+                    {
+                        Rectangle shortcutBounds = new Rectangle(shortcutLeft, 0, shortcutSize.Width, e.Item.Height);
+                        TextRenderer.DrawText(e.Graphics, shortcut, e.TextFont, shortcutBounds, shortcutColor,
+                            TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter | TextFormatFlags.Right);
+                    }
                     return;
-                }
-                if (e.Text == shortcut && !String.IsNullOrEmpty(shortcut))
-                {
-                    Rectangle shortcutBounds = new Rectangle(shortcutLeft, 0, shortcutSize.Width, e.Item.Height);
-                    TextRenderer.DrawText(e.Graphics, shortcut, e.TextFont, shortcutBounds, shortcutColor,
-                        TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter | TextFormatFlags.Right);
                 }
                 return;
             }
@@ -474,6 +475,17 @@ namespace DshPortable
                         using (GraphicsPath outline = RoundedRectangle(new Rectangle((int)x - 6, (int)y - 5, 12, 10), 2))
                             e.Graphics.DrawPath(pen, outline);
                         e.Graphics.DrawLine(pen, x - 2, y - 5, x - 2, y + 5);
+                    }
+                    else if (e.Item.Name == "nav-new-session")
+                    {
+                        e.Graphics.DrawLines(pen, new PointF[] {
+                            new PointF(x + 5, y + 1), new PointF(x + 5, y + 5),
+                            new PointF(x - 5, y + 5), new PointF(x - 5, y - 5), new PointF(x - 1, y - 5),
+                        });
+                        e.Graphics.DrawPolygon(pen, new PointF[] {
+                            new PointF(x - 1, y + 2), new PointF(x, y - 1), new PointF(x + 4, y - 5),
+                            new PointF(x + 6, y - 3), new PointF(x + 2, y + 1),
+                        });
                     }
                     else
                     {
