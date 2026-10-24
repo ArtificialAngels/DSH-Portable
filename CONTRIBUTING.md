@@ -12,6 +12,7 @@
 
 - 便携版特有行为应位于启动器、桌面桥接、打包或更新边界；没有兼容性理由时，不要复刻官方 DSH 行为。
 - 更新和修复必须保留会话、凭据、插件与工作区。
+- 本地升级使用完整且验收通过的 Portable 包或更新事务；单独替换原生 EXE 只能称为热修预览。升级后核对版本页、`licenses/COMPONENTS.json`、运行时胶囊和 Node 实物版本，不用改元数据伪装整包升级。
 - 用户可见行为的公开文档保持中英双语。
 - 不要提交凭据、私人会话、生成的发布成品或本地构建缓存。
 
@@ -51,7 +52,7 @@ Thanks for helping improve DSH-Portable. Small, focused changes are easier to re
 2. Confirm that official DeepSeek Harness does not already provide the capability.
 3. Discuss larger changes before implementation, describing the user problem and expected result.
 
-Keep Portable-specific behavior in the launcher, desktop bridge, packaging, or update boundary. Preserve sessions, credentials, plugins, and workspaces across updates and repairs. Never commit credentials, private conversations, generated release artifacts, or local build caches.
+Keep Portable-specific behavior in the launcher, desktop bridge, packaging, or update boundary. Preserve sessions, credentials, plugins, and workspaces across updates and repairs. Local upgrades use a complete qualified Portable package or update transaction; an EXE-only replacement is a hotfix preview. Verify the version page, `licenses/COMPONENTS.json`, runtime capsule and actual Node version afterward; never relabel a mixed package as an upgraded release. Never commit credentials, private conversations, generated release artifacts, or local build caches.
 
 The official core declares the Node engine range `^22.19.0 || >=24.0.0`; existing compatibility tests retain Node 24.19.0 scenarios. Bundled runtimes and Node 24 CI jobs use the Node 24.22.1 security release pinned in `upstream.lock.json`. Compatibility does not imply a recommended distribution version; npm dependency overrides do not update the Undici built into Node.
 
@@ -72,3 +73,9 @@ Explain the user-visible problem, the implementation boundary, and the verificat
 - Remove only confirmed unused build outputs and caches, preserving current acceptance artifacts, failure evidence and user data. Refactor concrete defects or duplication without mixing unrelated rewrites into release fixes.
 
 By contributing, you agree that your contribution is licensed under the repository's Apache-2.0 License.
+
+### 本机 Windows 验收与交付
+
+后台控制台程序必须明确使用 `CREATE_NO_WINDOW`，包括文件重定向场景；仅设置 `windowsHide` 或 `SW_HIDE` 不算保证。GUI 验收使用不切换输入桌面的私有桌面，记录实际控制台创建标志与前台状态，不向用户交互桌面发送输入。
+
+交付前核对实际新启动子进程的完整性级别。低完整性验收副本不能直接作为日常便携包；需要修复时只处理已确认无外部硬链接的受管执行文件，核对内容摘要及 DACL 不变，不递归修改用户数据或缓存目录权限。停止和状态查询不应依赖运行时准备或新租约；保持原有进程归属检查。
