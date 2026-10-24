@@ -54,12 +54,18 @@ jobs:
         id: preview
         run: |
           node scripts/version-policy.mjs "$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-          node -e "const lock=require(require('./package.json').version.includes('-') ? './upstream.preview.lock.json' : './upstream.lock.json'); console.log('commit='+lock.dsh.reviewedCommit); console.log('version='+lock.dsh.version); console.log('packageManager='+lock.dsh.packageManager); for (const [family,count] of Object.entries(lock.dsh.packedFamilies)) console.log(family+'Count='+count)" >> "$GITHUB_OUTPUT"
+          node -e "const lock=require(require('./package.json').version.includes('-') ? './upstream.preview.lock.json' : './upstream.lock.json'); console.log('commit='+lock.dsh.reviewedCommit); console.log('version='+lock.dsh.version); console.log('packageManager='+lock.dsh.packageManager); console.log('lockFile='+(require('./package.json').version.includes('-') ? 'upstream.preview.lock.json' : 'upstream.lock.json')); console.log('pnpmCommit='+require('./upstream.lock.json').pnpm.sourceBuild.reviewedCommit); for (const [family,count] of Object.entries(lock.dsh.packedFamilies)) console.log(family+'Count='+count)" >> "$GITHUB_OUTPUT"
+      - name: Bind default-branch execution to reviewed immutable source
+        run: |
+          node -e "if(process.env.GITHUB_REF==='refs/heads/main'){const fs=require('fs');const preview=require('./package.json').version.includes('-');const lock=require(preview?'./upstream.preview.lock.json':'./upstream.lock.json');const expected=preview?'2fbf4359b82fb94c03dcce0b831660d87f12ea5c':'1f81c047fc48fa190a683e469daa699857e9afe8';if(lock.dsh.reviewedCommit!==expected||require('./upstream.lock.json').pnpm.sourceBuild.reviewedCommit!=='8e1e4c0aaece387dfda16377b2ba31f7a1a2602c')throw Error('Default-branch source changed and requires explicit review')}"
       - uses: actions/checkout@v7
         with:
           repository: deepseek-ai/deepseek-harness
-          ref: ${{ steps.preview.outputs.commit }}
+          ref: ${{ github.ref == 'refs/heads/main' && (steps.preview.outputs.lockFile == 'upstream.preview.lock.json' && '2fbf4359b82fb94c03dcce0b831660d87f12ea5c' || '1f81c047fc48fa190a683e469daa699857e9afe8') || steps.preview.outputs.commit }}
           path: upstream
+          persist-credentials: false
+      - name: Apply reviewed source dependency locks
+        run: node scripts/prepare-reviewed-source-dependencies.mjs --source upstream --lock "${{ steps.preview.outputs.lockFile }}" --dependency-lock upstream.lock.json --output source-dependency-receipt.json
       - name: Build and pack the locked official DSH source
         run: |
           test "$(git -C upstream rev-parse HEAD)" = "${{ steps.preview.outputs.commit }}"
@@ -68,6 +74,7 @@ jobs:
           pnpm --dir upstream run build:official
           pnpm --dir upstream run release:pack --family dsh --out dist/npm --concurrency 8
           pnpm --dir upstream run release:pack --family vendor --out dist/npm-vendor --concurrency 8
+          cp source-dependency-receipt.json upstream/dist/source-dependency-receipt.json
           mkdir -p upstream/dist/npm-landlock
           if [ '${{ steps.preview.outputs.landlockCount }}' = 1 ]; then
             pnpm --dir upstream/native/landlock-run/packages/entry pack --pack-destination "$PWD/upstream/dist/npm-landlock"
@@ -75,6 +82,25 @@ jobs:
           test "$(find upstream/dist/npm -maxdepth 1 -name '*.tgz' | wc -l)" -eq "${{ steps.preview.outputs.dshCount }}"
           test "$(find upstream/dist/npm-vendor -maxdepth 1 -name '*.tgz' | wc -l)" -eq "${{ steps.preview.outputs.vendorCount }}"
           test "$(find upstream/dist/npm-landlock -maxdepth 1 -name '*.tgz' | wc -l)" -eq "${{ steps.preview.outputs.landlockCount }}"
+      - uses: actions/checkout@v7
+        with:
+          repository: pnpm/pnpm
+          ref: ${{ github.ref == 'refs/heads/main' && '8e1e4c0aaece387dfda16377b2ba31f7a1a2602c' || steps.preview.outputs.pnpmCommit }}
+          path: pnpm-source
+          persist-credentials: false
+      - name: Rebuild the reviewed package manager
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pnpm-build" --ignore-scripts --no-audit --no-fund "pnpm@$(node -p "require('./upstream.lock.json').pnpm.version")"
+          node scripts/build-reviewed-pnpm.mjs --source pnpm-source --pnpm "$RUNNER_TEMP/pnpm-build/node_modules/pnpm/bin/pnpm.cjs" --output upstream/dist/pnpm
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: reviewed-runtime-build-evidence
+          path: |
+            source-dependency-receipt.json
+            upstream/dist/pnpm/report.json
+            upstream/dist/pnpm/*.log
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v7
         with:
           name: preview-packed-runtime
@@ -82,6 +108,8 @@ jobs:
             upstream/dist/npm
             upstream/dist/npm-vendor
             upstream/dist/npm-landlock
+            upstream/dist/pnpm
+            upstream/dist/source-dependency-receipt.json
           if-no-files-found: error
           compression-level: 0
 
