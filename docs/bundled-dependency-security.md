@@ -10,9 +10,11 @@
 | pnpm11.11.0 | Bundled Undici7.28.0 and distributed6.27.0 retain the old response-stream order. | Updating Node built-in Undici does not replace pnpm internal copies. / 更新 Node 不替换 pnpm 内置副本。 |
 | Reviewed official pnpm11.28.5–11.28.8 packages | .5/.6 retain7.29.1+6.29.0; .7/.8 repair6.x to6.29.1 but still inline7.29.1. Registry SHA512 and npm signatures verified. | No reviewed same-major original package fully resolves this risk. / 已审的同主版本原包尚未完全修复。 |
 
-The frontend and pnpm observations are static code and module-registration evidence, not a demonstrated exploit of a user session. The actual application installation graph separately passed bounded Zod/Undici behavior checks and a fresh npm advisory query; neither check inventories code already inlined in these bundles.
+The frontend observation is static code and shared-module registration evidence. In isolated loopback registry probes, pnpm11.11.0 and11.28.8 on Node24.22.1 both used their bundled fetch implementation (`globalThis.fetch` calls:0). Normal queries succeeded; six content encodings with a truncated declared body caused an unhandled `ResponseContentLengthMismatchError` and child exit1. No real registry or user session was involved.
 
-上述结论来自实际打包代码及共享模块注册，并非已复现用户会话攻击。应用安装图的实测与公告查询不能覆盖已内联的代码，不能用其绿色结果替代这里的验收。
+前端结论来自打包代码与共享模块注册。pnpm 两个版本已在 Node24.22.1 下用隔离本地 registry 实测：普通查询成功；六层编码加声明长度不足的短响应触发未捕获错误，子进程退出1；没有调用 Node 的全局 fetch，也没有访问真实 registry 或用户会话。因此更新 Node 不能修复 pnpm 的这条实际路径。
+
+The application installation graph separately passed bounded Zod/Undici checks and a fresh npm advisory query. These checks do not inventory code already inlined in bundles. / 应用安装图的绿色结果不能替代内联副本的验收。
 
 Before unblocking publication / 解除阻断前：
 
