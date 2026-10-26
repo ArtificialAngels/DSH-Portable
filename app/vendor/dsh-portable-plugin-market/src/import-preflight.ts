@@ -6,7 +6,7 @@ import { execFile } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { load } from 'js-yaml'
-import { findDshInstallDir } from './check.ts'
+import { entrySchema, findDshInstallDir } from './check.ts'
 import { resolveBundlePatchPaths } from './package-path.ts'
 import { entryArtifactExists } from './profile.ts'
 
@@ -57,7 +57,8 @@ function importTargets(dir: string): string[] {
   }
   const paths = resolveBundlePatchPaths(dir, manifest.dsh.bundle.patch)
   if (paths === null) return []
-  for (const patchPath of paths) visit(load(readFileSync(patchPath, 'utf8')))
+  // Match boot's dialect, but let read/parse failures reject the preflight.
+  for (const patchPath of paths) visit(load(readFileSync(patchPath, 'utf8'), { schema: entrySchema }))
   return targets
 }
 

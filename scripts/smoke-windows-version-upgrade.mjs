@@ -13,6 +13,18 @@ import { ensureRuntimeCapsule } from '../launcher/runtime-capsule.mjs'
 import { comparePortableVersions } from '../launcher/update-core.mjs'
 
 const execFileAsync = promisify(execFile)
+// Finish only this disposable installation; the desktop may outlive its updater.
+function validatePendingUpdate() {
+  return new Promise((resolve, reject) => {
+    const updater = spawn(path.join(destination, 'launcher', 'DSH-FullUpdater.exe'), [
+      '--destination', destination, '--manifest', 'http://127.0.0.1:1/unreachable.json',
+      '--allow-http', '--result', resultPath,
+    ], { windowsHide: true, shell: false, stdio: 'ignore', timeout: 10 * 60 * 1000 })
+    updater.once('error', reject)
+    updater.once('exit', (code, signal) => code === 0 ? resolve() : reject(new Error(`The full updater exited with ${signal || code}.`)))
+  })
+}
+
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const oldArchive = path.resolve(process.argv[2] || '')
 const artifacts = path.resolve(process.argv[3] || path.join(projectRoot, 'artifacts'))
@@ -273,8 +285,17 @@ try {
       throw new Error(`the prior full updater failed: ${diagnostic}`, { cause: error })
     }
     const result = JSON.parse(await readFile(resultPath, 'utf8'))
-    assert.equal(result.status, 'updated')
+    const deferredValidation = !runningHostUpgrade || sourceOverlay
+    if (deferredValidation && needsNewBootstrap) assert.equal(result.status, 'pending-validation')
+    else assert.ok(result.status === 'updated' || (deferredValidation && result.status === 'pending-validation'),
+      'a full update must be validated or explicitly pending validation')
     assert.equal(result.version, fullManifestSource.version)
+    if (result.status === 'pending-validation') {
+      await validatePendingUpdate()
+      assert.equal(JSON.parse(await readFile(resultPath, 'utf8')).status, 'updated')
+      assert.deepEqual((await readdir(path.dirname(destination))).filter(name => /^\.dsh-portable-(backup-|update-)/.test(name)), [])
+      await stopFinishedProduct()
+    }
   } else {
     const oldNode = path.join(destination, 'runtime', 'node', 'node.exe')
     const oldCli = path.join(destination, 'launcher', 'portable-cli.mjs')
