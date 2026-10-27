@@ -23,7 +23,7 @@ gh workflow run official-pure-e2e.yml --ref <branch> -f scenario=data-transfer -
 ## 门槛和证据
 
 1. 下载前核对官方候选来源；下载后验证完整大小、SHA-512、有效 Authenticode 与 DeepSeek 发布者，安全展开 NSIS。
-2. 更新契约哨兵用真实官方界面验证 updater 交接；完整 E2E 验证旧到新、搬迁、插件操作、退出及写入边界。完整包与轻量包还须各自启动和搬迁。
+2. 更新契约哨兵用真实官方界面验证 updater 交接；完整 E2E 验证旧到新、离线修复、保留版本及健康回退、真实窗口、退出、协议恢复和写入边界。完整包与轻量包还须各自首启、二启和搬迁后的官方 CLI 配置检查；跨机真实 UI 另走 data-transfer 场景。
 3. 从实际冒烟根的 ASAR 收集安全报告。最新签名 Windows `0.2.1-rc.3` 的 MCP client/core 仍为 2.2.0，三份相关清单完整性通过，但命中 GHSA-6prh-2h8m-c8cw；运行成功仍为 security blocked。
 4. 发布入口先验证共享 CLI 的报告绑定：同一 repository/run/attempt/source/candidate、实际 ASAR 大小/摘要、原报告与复核报告摘要、包摘要以及严格布尔资格。`--report-only` 返回 0 不授予发布资格。
 5. 历史版本的启动器资产不可重建覆盖。只生成本次候选的副本；已有同名不同摘要资产必须拒绝，禁止用 mutable 模式绕过。
@@ -38,15 +38,37 @@ node scripts/check-official-payload-security.mjs '<portable-root>/app/<version>/
 
 ## 程序、数据与清理
 
-完整包包含官方 `app/<version>/`；轻量包无应用版本目录和 `current.json`，解压后上限 40 MiB，首次联网安装。默认不播种 Portable 插件；可选种子实现保留供显式配置使用。
+完整包包含官方 `app/<version>/`；轻量包无应用版本目录和 `current.json`，解压后上限 40 MiB；首次可联网安装，也可由维护入口使用本地官方安装包。默认不播种 Portable 插件；可选种子实现保留供显式配置使用。
 
-应用状态位于 `data/dsh-home`、`data/agents`、`data/electron` 和 `data/cache/native-addons`。官方默认 `Documents/deepseek-harness/default-workspace` 及用户另选工作区仍可位于根外。官方 updater 的专用缓存和运行期间临时 `HKCU\Software\Classes\dsh` 注册是已知根外边界；退出须核对注册表恢复。当前 E2E 对全局 `.dsh`、`.agents` 和默认 Electron profile 的写入作失败判定；其他官方自身写入记录但未全部收窄为允许清单，不能把该门槛描述为全应用零外写证明。
+应用状态位于 `data/dsh-home`、`data/agents`、`data/electron` 和 `data/cache/native-addons`。官方默认 `Documents/deepseek-harness/default-workspace` 及用户另选工作区仍可位于根外。官方 updater 的专用缓存和运行期间临时 `HKCU\Software\Classes\dsh` 注册是已知根外边界；退出须核对注册表恢复。当前 E2E 在官方程序及实际观察到的子进程链内，对全局 `.dsh`、`.agents` 和默认 Electron profile 的写入作失败判定；其他官方自身写入记录但未全部收窄为允许清单，不能把该门槛描述为全应用零外写证明。
 
 旧官方包有固定端口 19387；本轮新成品实测使用动态端口。启动器仍保留跨旧版本的冲突保护，不结束外来进程。动态端口也不等于任意多实例已经验收。
 
-更新成功后，仅完整树摘要与收据匹配的更旧程序允许自动清理；当前/上一版本、旧格式收据、未知或改动目录保留。锁定、路径异常或清理失败记录 deferred，不能回滚已提交更新。崩溃遗留的 `.partial` 和目标冲突仍拒绝覆盖，保留日志并人工核实。
+更新成功后，仅完整树摘要与收据匹配的更旧程序允许自动清理；当前/上一版本、旧格式收据、未知或改动目录保留。锁定、路径异常或清理失败记录 deferred，不能回滚已提交更新。未登记的 `.partial`、目标冲突和固定修复备份槽仍拒绝覆盖；已登记的中断操作由同一引擎按状态与完整树收据恢复，外部改动则保留现场并拒绝继续。
 
 本地构建和验收临时副本完成后移回收站并验证可恢复记录；失败运行只保留日志。不要复用没有回收记录的旧清理 helper，不对原便携目录运行清理。CI 使用一次性 runner。
+
+## 离线更新、修复和程序回退
+
+完全退出本包窗口后，按住 Shift 启动 `DeepSeek Harness Portable.exe`，或使用 `--maintenance` 打开维护入口。入口由外置启动器提供，不改官方菜单。三个动作复用同一个 `launcher/apply-update.ps1` 和进度窗：
+
+| 动作 | 输入与边界 |
+| --- | --- |
+| 从文件更新 | 官方 Windows x64 安装包和已验收索引快照；无 current 的轻量包也可离线首次安装。按完整大小与 SHA-512 唯一匹配版本，再验 Authenticode、发布者和解包边界，不按文件名猜版本。 |
+| 修复官方程序 | 同版本的官方安装包；修复 `app/<当前版本>/`，数据原样保留。旧程序和收据放在固定 `.repair-backup` 槽；整个便携根只允许新增一组修复保全槽，任何版本已有槽时停止，核实后移回收站再修复。 |
+| 回退 | 只接受 current 中记录、完整树收据仍匹配的 previous。保留退下的程序，清空 previous，记录 rejected；不支持任意历史版本。 |
+
+GUI 优先读取安装包同目录的 `accepted-index.json`，否则使用随包快照；CLI 可用 `--index-file` 指定。随包 `launcher/accepted-index.json` 是打包时已验收目录的快照；在线更新成功读取的新目录也会刷新该快照。联网机器从索引条目的 `url` 下载官方安装包，将安装包和该快照一同带到离线机器。目录不包含的未来版本不能凭文件名强行接纳；需先取得维护方验收后的新快照。当前发布阻断仍生效，不能把测试专用候选索引当公开接纳。
+
+自动化维护可使用同一启动器参数，无需第二套安装器：
+
+```powershell
+& '<root>/DeepSeek Harness Portable.exe' --installer-file '<official-installer.exe>' --index-file '<accepted-index.json>'
+& '<root>/DeepSeek Harness Portable.exe' --repair --installer-file '<same-version-official-installer.exe>'
+& '<root>/DeepSeek Harness Portable.exe' --rollback
+```
+
+本地安装包模式不回退到网络，索引最多 1 MiB，验证与解包期间持有安装包只读租约。正常启动优先恢复已登记的中断操作；解包未完成时，显式本地操作保留原安装包/索引重试，已准备提交的操作只收口一次。显式 `--recover` 仅恢复，不触发首次安装；恢复时核验 current 摘要、待切换目录和收据，无法确认所有权或发现外部改动则保留材料并停止。共享用户数据、工作区、登录状态及官方数据 schema 不在程序回退范围，旧二进制是否兼容新数据由官方决定。
 
 ## 旧 Native 数据迁入
 
