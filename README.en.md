@@ -112,11 +112,11 @@ Find more in **Settings → Plugins → Plugin Market**; to add one manually, en
 
 | Platform | Available cores |
 | --- | --- |
-| Windows x64 | — |
-| macOS arm64 | — |
-| macOS x64 | — |
-| Linux x64 | — |
-| Linux arm64 | — |
+| Windows x64 | [0.2.2-rc.2](https://github.com/WSL043/DSH-Portable-Updates/releases/download/update-channel-core-stable/dsh-core-index-windows-x64.json) |
+| macOS arm64 | [0.2.2-rc.2](https://github.com/WSL043/DSH-Portable-Updates/releases/download/update-channel-core-stable/dsh-core-index-macos-arm64.json) |
+| macOS x64 | [0.2.2-rc.2](https://github.com/WSL043/DSH-Portable-Updates/releases/download/update-channel-core-stable/dsh-core-index-macos-x64.json) |
+| Linux x64 | [0.2.2-rc.2](https://github.com/WSL043/DSH-Portable-Updates/releases/download/update-channel-core-stable/dsh-core-index-linux-x64.json) |
+| Linux arm64 | [0.2.2-rc.2](https://github.com/WSL043/DSH-Portable-Updates/releases/download/update-channel-core-stable/dsh-core-index-linux-arm64.json) |
 
 The window covers the newest five versions, retaining at least two release candidates or finals. The table syncs qualified stable-catalog entries hourly and may contain fewer than five; — means no matching version.
 
